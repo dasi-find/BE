@@ -25,5 +25,22 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
 
+  redis:
+    image: redis:7.4-alpine
+    container_name: dasi-find-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    volumes:
+      - redis-data:/data
+
 volumes:
   mysql-data:
+  redis-data:
