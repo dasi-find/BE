@@ -31,7 +31,15 @@ docker compose up -d
 docker compose ps
 ```
 
-`dasi-find-mysql`의 상태가 `healthy`가 되면 애플리케이션을 실행할 수 있습니다.
+`dasi-find-mysql`과 `dasi-find-redis`의 상태가 모두 `healthy`가 되면 애플리케이션을 실행할 수 있습니다.
+
+이메일 인증 메일을 보내려면 `.env`에 Gmail 계정과 Google 앱 비밀번호를 설정합니다.
+
+```text
+MAIL_USERNAME=your-account@gmail.com
+MAIL_PASSWORD=your-google-app-password
+MAIL_FROM=your-account@gmail.com
+```
 
 ## 실행
 
