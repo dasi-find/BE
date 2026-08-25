@@ -15,17 +15,23 @@
 
 ## 실행 준비
 
-Java 21과 MySQL이 필요합니다. 로컬 환경변수는 `.env.example`을 참고하여 개인 환경에 설정합니다.
+Java 21과 Docker Desktop이 필요합니다. 먼저 로컬 환경변수 파일을 만듭니다.
 
-```text
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=dasi_find
-DB_USERNAME=dasi_find
-DB_PASSWORD=
+```bash
+cp .env.example .env
 ```
 
-실제 비밀번호는 Git에 커밋하지 않습니다.
+`.env`의 `DB_PASSWORD`와 `DB_ROOT_PASSWORD`를 로컬에서 사용할 값으로 변경합니다. 실제 비밀번호가 담긴 `.env`는 Git에 커밋하지 않습니다.
+로컬의 3306 포트를 다른 MySQL이 사용 중이면 `.env`의 `DB_PORT`를 3307 등 빈 포트로 변경합니다.
+
+로컬 MySQL을 실행합니다.
+
+```bash
+docker compose up -d
+docker compose ps
+```
+
+`dasi-find-mysql`의 상태가 `healthy`가 되면 애플리케이션을 실행할 수 있습니다.
 
 ## 실행
 
@@ -34,6 +40,8 @@ DB_PASSWORD=
 ```
 
 서버는 기본적으로 `http://localhost:8080`에서 실행됩니다.
+
+시작 시 Flyway가 `src/main/resources/db/migration`의 migration을 순서대로 적용합니다. 로컬 DB에서는 `flyway_schema_history` 테이블로 적용 이력을 확인할 수 있습니다.
 
 상태 확인:
 
