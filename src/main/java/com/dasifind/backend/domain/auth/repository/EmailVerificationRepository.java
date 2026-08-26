@@ -25,5 +25,7 @@ public interface EmailVerificationRepository {
 
     void saveToken(String verificationToken, String email, Duration ttl);
 
+    boolean matchesToken(String verificationToken, String email);
+
     boolean consumeToken(String verificationToken, String email);
 }

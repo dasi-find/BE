@@ -115,6 +115,12 @@ public class EmailVerificationService {
         }
     }
 
+    public void validateVerificationToken(String verificationToken, String rawEmail) {
+        if (!verificationRepository.matchesToken(verificationToken, normalizeEmail(rawEmail))) {
+            throw new BusinessException(ErrorCode.EMAIL_VERIFICATION_EXPIRED);
+        }
+    }
+
     private String normalizeEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
     }
