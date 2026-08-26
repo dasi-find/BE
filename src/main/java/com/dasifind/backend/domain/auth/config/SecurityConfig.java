@@ -19,6 +19,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/api/v1/auth/signup",
+                                "/api/v1/auth/login",
                                 "/api/v1/auth/email-verifications/**",
                                 "/actuator/health"
                         ).permitAll()

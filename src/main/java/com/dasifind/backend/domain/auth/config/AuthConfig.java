@@ -14,7 +14,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 
 @Configuration
-@EnableConfigurationProperties({EmailVerificationProperties.class, AuthTokenProperties.class})
+@EnableConfigurationProperties({
+        EmailVerificationProperties.class,
+        AuthTokenProperties.class,
+        LoginAttemptProperties.class
+})
 public class AuthConfig {
 
     private static final String HMAC_SHA_256 = "HmacSHA256";
