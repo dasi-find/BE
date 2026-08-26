@@ -27,5 +27,10 @@ class UserRepositoryTest {
         ));
 
         assertThat(userRepository.existsByEmailIgnoreCase("USER@EXAMPLE.COM")).isTrue();
+        assertThat(userRepository.findByEmailIgnoreCase("USER@EXAMPLE.COM"))
+                .isPresent()
+                .get()
+                .extracting(User::getEmail)
+                .isEqualTo("user@example.com");
     }
 }
