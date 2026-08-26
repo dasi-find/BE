@@ -50,8 +50,8 @@ public class LoginService {
         }
 
         User user = optionalUser.get();
-        loginAttemptService.clear(email);
         IssuedTokens tokens = authTokenService.issue(user.getId());
+        loginAttemptService.clear(email);
         LoginResponse response = new LoginResponse(
                 AuthUserResponse.from(user),
                 tokens.accessToken(),

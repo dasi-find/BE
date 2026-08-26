@@ -67,11 +67,25 @@ class LoginServiceTest {
 
         InOrder inOrder = inOrder(loginAttemptService, authTokenService);
         inOrder.verify(loginAttemptService).ensureAllowed("user@example.com");
-        inOrder.verify(loginAttemptService).clear("user@example.com");
         inOrder.verify(authTokenService).issue(7L);
+        inOrder.verify(loginAttemptService).clear("user@example.com");
         assertThat(result.response().user().id()).isEqualTo(7L);
         assertThat(result.response().accessToken()).isEqualTo("access-token");
         assertThat(result.refreshToken()).isEqualTo("refresh-token");
+    }
+
+    @Test
+    void 토큰_발급에_실패하면_로그인_실패_횟수를_초기화하지_않는다() {
+        User user = user(7L, "user@example.com", "encoded-password");
+        when(userRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password123", "encoded-password")).thenReturn(true);
+        RuntimeException tokenIssueFailure = new RuntimeException("token issue failed");
+        when(authTokenService.issue(7L)).thenThrow(tokenIssueFailure);
+
+        assertThatThrownBy(() -> loginService.login(new LoginRequest("user@example.com", "password123")))
+                .isSameAs(tokenIssueFailure);
+
+        verify(loginAttemptService, never()).clear("user@example.com");
     }
 
     @Test

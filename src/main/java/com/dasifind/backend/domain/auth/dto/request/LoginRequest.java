@@ -8,4 +8,8 @@ public record LoginRequest(
         @NotBlank @Email String email,
         @NotBlank @Size(min = 8, max = 64) String password
 ) {
+
+    public LoginRequest {
+        email = email == null ? null : email.trim();
+    }
 }

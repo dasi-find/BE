@@ -15,6 +15,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -65,6 +67,23 @@ class LoginControllerTest {
                         .content(validRequest().replace("user@example.com", "invalid-email")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("COMMON4001"));
+    }
+
+    @Test
+    void 이메일의_앞뒤_공백을_제거한_뒤_형식을_검증한다() throws Exception {
+        LoginResponse response = new LoginResponse(
+                new AuthUserResponse(7L, "user@example.com", "민준"),
+                "access-token",
+                1800
+        );
+        when(loginService.login(any())).thenReturn(new LoginResult(response, "refresh-token"));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validRequest().replace("user@example.com", " user@example.com ")))
+                .andExpect(status().isOk());
+
+        verify(loginService).login(argThat(request -> request.email().equals("user@example.com")));
     }
 
     private String validRequest() {
