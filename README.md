@@ -41,6 +41,14 @@ MAIL_PASSWORD=your-google-app-password
 MAIL_FROM=your-account@gmail.com
 ```
 
+회원가입과 로그인 토큰 발급에 사용할 JWT 서명 키도 설정합니다. 서명 키는 32자 이상의 충분히 긴 난수를 사용하고 Git에 커밋하지 않습니다.
+
+```text
+JWT_SECRET=replace-with-at-least-32-random-characters
+```
+
+로컬 HTTP 환경은 `refreshToken`, `AUTH_COOKIE_SECURE=false`를 사용합니다. 운영 HTTPS 환경은 반드시 `REFRESH_TOKEN_COOKIE_NAME=__Host-refresh_token`, `AUTH_COOKIE_SECURE=true`로 설정해야 합니다.
+
 ## 실행
 
 ```bash

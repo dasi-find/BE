@@ -63,4 +63,24 @@ public class User {
         LocalDateTime now = LocalDateTime.now();
         return new User(email, password, name, emailNotificationEnabled, now, now);
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean isEmailNotificationEnabled() {
+        return emailNotificationEnabled;
+    }
 }
