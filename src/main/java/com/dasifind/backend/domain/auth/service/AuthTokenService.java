@@ -65,6 +65,10 @@ public class AuthTokenService {
         );
     }
 
+    public void revokeRefreshToken(String refreshToken) {
+        refreshTokenRepository.delete(hash(refreshToken));
+    }
+
     private String randomToken() {
         byte[] bytes = new byte[REFRESH_TOKEN_BYTES];
         secureRandom.nextBytes(bytes);

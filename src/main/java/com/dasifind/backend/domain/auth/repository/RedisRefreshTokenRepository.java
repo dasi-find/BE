@@ -20,4 +20,9 @@ public class RedisRefreshTokenRepository implements RefreshTokenRepository {
     public void save(String tokenHash, Long userId, Duration ttl) {
         redisTemplate.opsForValue().set(KEY_PREFIX + tokenHash, userId.toString(), ttl);
     }
+
+    @Override
+    public void delete(String tokenHash) {
+        redisTemplate.delete(KEY_PREFIX + tokenHash);
+    }
 }

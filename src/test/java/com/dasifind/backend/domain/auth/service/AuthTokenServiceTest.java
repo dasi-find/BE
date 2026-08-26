@@ -63,4 +63,31 @@ class AuthTokenServiceTest {
                 .matches("[0-9a-f]{64}")
                 .isNotEqualTo(tokens.refreshToken());
     }
+
+    @Test
+    void 리프레시_토큰을_원문이_아닌_해시로_폐기한다() {
+        AuthTokenProperties properties = new AuthTokenProperties(
+                "dasifind",
+                "test-secret-key-that-is-longer-than-32-bytes",
+                Duration.ofMinutes(30),
+                Duration.ofDays(14),
+                "__Host-refresh_token",
+                true
+        );
+        AuthTokenService authTokenService = new AuthTokenService(
+                jwtEncoder,
+                refreshTokenRepository,
+                properties,
+                new SecureRandom()
+        );
+
+        authTokenService.revokeRefreshToken("refresh-token");
+
+        ArgumentCaptor<String> hashCaptor = ArgumentCaptor.forClass(String.class);
+        verify(refreshTokenRepository).delete(hashCaptor.capture());
+        assertThat(hashCaptor.getValue())
+                .hasSize(64)
+                .matches("[0-9a-f]{64}")
+                .isNotEqualTo("refresh-token");
+    }
 }

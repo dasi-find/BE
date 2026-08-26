@@ -206,6 +206,25 @@ class EmailVerificationServiceTest {
     }
 
     @Test
+    void 인증_토큰을_소비하지_않고_이메일과_일치하는지_검증한다() {
+        when(verificationRepository.matchesToken("evt_token", "user@example.com")).thenReturn(true);
+
+        service.validateVerificationToken("evt_token", " USER@example.com ");
+
+        verify(verificationRepository).matchesToken("evt_token", "user@example.com");
+        verify(verificationRepository, never()).consumeToken(anyString(), anyString());
+    }
+
+    @Test
+    void 사전_검증에서_만료되거나_이메일이_다른_토큰을_거절한다() {
+        when(verificationRepository.matchesToken("evt_token", "user@example.com")).thenReturn(false);
+
+        assertThatThrownBy(() -> service.validateVerificationToken("evt_token", "user@example.com"))
+                .isInstanceOfSatisfying(BusinessException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.EMAIL_VERIFICATION_EXPIRED));
+    }
+
+    @Test
     void 이미_확인한_요청을_다시_확인하면_중복_요청으로_거절한다() {
         when(verificationRepository.isConfirmed("ev_confirmed")).thenReturn(true);
 

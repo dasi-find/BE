@@ -17,6 +17,8 @@ import java.security.SecureRandom;
 @EnableConfigurationProperties({EmailVerificationProperties.class, AuthTokenProperties.class})
 public class AuthConfig {
 
+    private static final String HMAC_SHA_256 = "HmacSHA256";
+
     @Bean
     SecureRandom secureRandom() {
         return new SecureRandom();
@@ -31,7 +33,7 @@ public class AuthConfig {
     JwtEncoder jwtEncoder(AuthTokenProperties properties) {
         SecretKeySpec secretKey = new SecretKeySpec(
                 properties.secret().getBytes(StandardCharsets.UTF_8),
-                MacAlgorithm.HS256.getName()
+                HMAC_SHA_256
         );
         return NimbusJwtEncoder.withSecretKey(secretKey)
                 .algorithm(MacAlgorithm.HS256)

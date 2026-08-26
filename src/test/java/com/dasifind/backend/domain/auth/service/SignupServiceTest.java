@@ -21,6 +21,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -74,6 +75,7 @@ class SignupServiceTest {
         assertThat(savedUser.getPassword()).isEqualTo("encoded-password");
         assertThat(savedUser.getName()).isEqualTo("민준");
         assertThat(savedUser.isEmailNotificationEnabled()).isTrue();
+        verify(emailVerificationService).validateVerificationToken("evt_token", "user@example.com");
         verify(emailVerificationService).consumeVerificationToken("evt_token", "user@example.com");
         assertThat(result.response().user().id()).isEqualTo(7L);
         assertThat(result.response().accessToken()).isEqualTo("access-token");
@@ -90,6 +92,7 @@ class SignupServiceTest {
                         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.EMAIL_ALREADY_EXISTS));
 
         verify(userRepository, never()).saveAndFlush(any());
+        verify(emailVerificationService, never()).validateVerificationToken(any(), any());
         verify(emailVerificationService, never()).consumeVerificationToken(any(), any());
     }
 
@@ -107,6 +110,48 @@ class SignupServiceTest {
 
         verify(emailVerificationService, never()).consumeVerificationToken(any(), any());
         verify(authTokenService, never()).issue(any());
+    }
+
+    @Test
+    void 리프레시_토큰_저장이_실패하면_이메일_인증_토큰을_소비하지_않는다() {
+        SignupRequest request = signupRequest("user@example.com");
+        when(userRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
+        when(passwordEncoder.encode("password123")).thenReturn("encoded-password");
+        when(userRepository.saveAndFlush(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            ReflectionTestUtils.setField(user, "id", 7L);
+            return user;
+        });
+        when(authTokenService.issue(7L)).thenThrow(new IllegalStateException("Redis unavailable"));
+
+        assertThatThrownBy(() -> signupService.signup(request))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(emailVerificationService).validateVerificationToken("evt_token", "user@example.com");
+        verify(emailVerificationService, never()).consumeVerificationToken(any(), any());
+    }
+
+    @Test
+    void 인증_토큰_최종_소비가_실패하면_저장한_리프레시_토큰을_폐기한다() {
+        SignupRequest request = signupRequest("user@example.com");
+        when(userRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
+        when(passwordEncoder.encode("password123")).thenReturn("encoded-password");
+        when(userRepository.saveAndFlush(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            ReflectionTestUtils.setField(user, "id", 7L);
+            return user;
+        });
+        when(authTokenService.issue(7L))
+                .thenReturn(new IssuedTokens("access-token", 1800, "refresh-token"));
+        doThrow(new BusinessException(ErrorCode.EMAIL_VERIFICATION_EXPIRED))
+                .when(emailVerificationService)
+                .consumeVerificationToken("evt_token", "user@example.com");
+
+        assertThatThrownBy(() -> signupService.signup(request))
+                .isInstanceOfSatisfying(BusinessException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.EMAIL_VERIFICATION_EXPIRED));
+
+        verify(authTokenService).revokeRefreshToken("refresh-token");
     }
 
     private SignupRequest signupRequest(String email) {

@@ -9,6 +9,8 @@ import com.dasifind.backend.domain.user.entity.User;
 import com.dasifind.backend.domain.user.repository.UserRepository;
 import com.dasifind.backend.global.error.BusinessException;
 import com.dasifind.backend.global.error.ErrorCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,8 @@ import java.util.Locale;
 
 @Service
 public class SignupService {
+
+    private static final Logger log = LoggerFactory.getLogger(SignupService.class);
 
     private final UserRepository userRepository;
     private final EmailVerificationService emailVerificationService;
@@ -42,6 +46,7 @@ public class SignupService {
         if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
+        emailVerificationService.validateVerificationToken(request.verificationToken(), email);
 
         User user = User.create(
                 email,
@@ -56,8 +61,13 @@ public class SignupService {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
-        emailVerificationService.consumeVerificationToken(request.verificationToken(), email);
         IssuedTokens tokens = authTokenService.issue(savedUser.getId());
+        try {
+            emailVerificationService.consumeVerificationToken(request.verificationToken(), email);
+        } catch (RuntimeException exception) {
+            revokeRefreshTokenAfterFailure(tokens.refreshToken(), exception);
+            throw exception;
+        }
         SignupResponse response = new SignupResponse(
                 AuthUserResponse.from(savedUser),
                 tokens.accessToken(),
@@ -68,5 +78,14 @@ public class SignupService {
 
     private String normalizeEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private void revokeRefreshTokenAfterFailure(String refreshToken, RuntimeException originalException) {
+        try {
+            authTokenService.revokeRefreshToken(refreshToken);
+        } catch (RuntimeException revokeException) {
+            originalException.addSuppressed(revokeException);
+            log.error("Failed to revoke refresh token after signup failure", revokeException);
+        }
     }
 }

@@ -99,6 +99,12 @@ public class RedisEmailVerificationRepository implements EmailVerificationReposi
     }
 
     @Override
+    public boolean matchesToken(String verificationToken, String email) {
+        String savedEmail = redisTemplate.opsForValue().get(TOKEN_PREFIX + verificationToken);
+        return email.equals(savedEmail);
+    }
+
+    @Override
     public boolean consumeToken(String verificationToken, String email) {
         Long consumed = redisTemplate.execute(
                 CONSUME_TOKEN_SCRIPT,
