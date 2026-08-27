@@ -47,7 +47,7 @@ jobs:
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name AWS-RunShellScript \
             --comment "Deploy dasi-find BE main" \
-            --parameters 'commands=["sudo -iu ubuntu bash -lc '\''cd /home/ubuntu/BE && ./deploy/update-from-main.sh'\''"]' \
+            --parameters 'commands=["sudo -iu ubuntu bash -lc '\''set -euo pipefail; if [ ! -d /home/ubuntu/BE/.git ]; then git clone --branch main --single-branch https://github.com/dasi-find/BE.git /home/ubuntu/BE; fi; cd /home/ubuntu/BE; git switch main; git fetch origin main; git pull --ff-only origin main; ./deploy/deploy.sh'\''"]' \
             --query 'Command.CommandId' \
             --output text)"
 
