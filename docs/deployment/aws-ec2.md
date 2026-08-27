@@ -32,10 +32,9 @@ EC2 보안 그룹은 다음 인바운드 규칙만 허용합니다.
 ## 최초 배포
 
 ```bash
-git clone https://github.com/dasi-find/BE.git
+git clone --branch main --single-branch https://github.com/dasi-find/BE.git
 cd BE
-git switch chore/13-aws-deployment
-chmod +x deploy/create-prod-env.sh deploy/deploy.sh
+chmod +x deploy/create-prod-env.sh deploy/deploy.sh deploy/update-from-main.sh
 ./deploy/create-prod-env.sh
 ./deploy/deploy.sh
 ```
@@ -61,11 +60,21 @@ docker compose --env-file .env.prod -f compose.prod.yaml logs --tail=200 backend
 
 ## 재배포
 
+운영 서버는 항상 `main` 브랜치만 추적합니다.
+
 ```bash
 cd ~/BE
-git pull --ff-only
-./deploy/deploy.sh
+./deploy/update-from-main.sh
 ```
+
+GitHub Actions는 `main` push를 감지해 테스트를 통과한 뒤 AWS Systems Manager로 위 스크립트를 실행합니다. GitHub에는 장기 AWS Access Key나 SSH 개인키를 저장하지 않습니다.
+
+자동 배포에는 다음 구성이 필요합니다.
+
+- EC2 인스턴스 역할: `AmazonSSMManagedInstanceCore` 권한
+- GitHub OIDC 공급자: `https://token.actions.githubusercontent.com`, 대상 `sts.amazonaws.com`
+- GitHub 배포 역할: 해당 EC2에 대한 Systems Manager 명령 실행 권한
+- GitHub 저장소 변수 `AWS_DEPLOY_ROLE_ARN`, `EC2_INSTANCE_ID`
 
 ## 재부팅 검증
 
