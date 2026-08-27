@@ -82,8 +82,9 @@ Spring Security가 추가된 상태이므로 인증 설정 구현 전에는 임�
 |---|---|---|
 | `local` | 로컬 개발 | MySQL |
 | `test` | 자동 테스트 | H2 In-Memory |
+| `prod` | 운영 배포 | Docker 내부 MySQL |
 
-배포 환경이 결정되면 `prod` 프로필을 추가합니다.
+AWS EC2 운영 배포 절차는 [`docs/deployment/aws-ec2.md`](docs/deployment/aws-ec2.md)를 참고합니다.
 
 ## Git Flow
 
