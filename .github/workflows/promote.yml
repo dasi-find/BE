@@ -1,0 +1,55 @@
+name: Promote develop to main
+
+on:
+  workflow_run:
+    workflows:
+      - BE CI
+    types:
+      - completed
+    branches:
+      - develop
+
+concurrency:
+  group: develop-to-main-promotion
+  cancel-in-progress: false
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  promote:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Merge verified develop commit into main
+        id: merge
+        env:
+          DEVELOP_SHA: ${{ github.event.workflow_run.head_sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          merge_sha="$(gh api \
+            --method POST \
+            "repos/${GITHUB_REPOSITORY}/merges" \
+            -f base=main \
+            -f head="$DEVELOP_SHA" \
+            -f commit_message="chore: develop 자동 승격" \
+            --jq '.sha // empty')"
+
+          if [[ -z "$merge_sha" ]]; then
+            echo "develop commit is already included in main."
+            echo "merged=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Merged develop commit $DEVELOP_SHA into main as $merge_sha."
+          echo "merged=true" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch production deployment
+        if: steps.merge.outputs.merged == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run cd.yml --ref main

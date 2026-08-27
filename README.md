@@ -88,6 +88,8 @@ AWS EC2 운영 배포 절차는 [`docs/deployment/aws-ec2.md`](docs/deployment/a
 
 ## Git Flow
 
+기능 브랜치는 Issue와 PR 단위로 `develop`에 병합합니다. `develop` push의 BE CI가 통과하면 해당 커밋을 `main`으로 자동 승격한 뒤 EC2 운영 배포를 실행합니다. 따라서 `develop` 머지는 운영 배포 승인을 겸합니다.
+
 모든 작업은 Issue 생성 후 `develop`에서 작업 브랜치를 생성해 진행합니다.
 
 ```text
