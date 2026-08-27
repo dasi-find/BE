@@ -69,6 +69,8 @@ cd ~/BE
 
 GitHub Actions는 `main` push를 감지해 테스트를 통과한 뒤 AWS Systems Manager로 위 스크립트를 실행합니다. GitHub에는 장기 AWS Access Key나 SSH 개인키를 저장하지 않습니다.
 
+EC2에 `/home/ubuntu/BE` 저장소가 없는 최초 배포 상황에서는 CD가 `main` 단일 브랜치를 자동으로 clone합니다. 기존 저장소가 있으면 `main`을 fast-forward 방식으로 먼저 갱신한 뒤 배포합니다. `.env.prod`는 Git에 포함되지 않으므로 최초 배포 전에 서버에서 한 번 생성해야 합니다.
+
 자동 배포에는 다음 구성이 필요합니다.
 
 - EC2 인스턴스 역할: `AmazonSSMManagedInstanceCore` 권한
