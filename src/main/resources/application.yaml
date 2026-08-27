@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: backend
+  profiles:
+    default: local
+  data:
+    redis:
+      repositories:
+        enabled: false
+  jpa:
+    open-in-view: false
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  mail:
+    from: ${MAIL_FROM:no-reply@dasifind.local}
+  auth:
+    login-attempt:
+      max-attempts: 5
+      block-duration: 10m
+    token:
+      issuer: dasifind
+      secret: ${JWT_SECRET}
+      access-ttl: ${ACCESS_TOKEN_TTL:30m}
+      refresh-ttl: ${REFRESH_TOKEN_TTL:14d}
+      refresh-cookie-name: ${REFRESH_TOKEN_COOKIE_NAME:refreshToken}
+      secure-cookie: ${AUTH_COOKIE_SECURE:false}
+    email-verification:
+      code-ttl: 5m
+      resend-cooldown: 60s
+      max-attempts: 5
+      token-ttl: 30m
+
+management:
+  health:
+    mail:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info
