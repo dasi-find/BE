@@ -29,6 +29,11 @@ EC2 보안 그룹은 다음 인바운드 규칙만 허용합니다.
 
 `8080`, `3306`, `6379`는 외부에 공개하지 않습니다.
 
+MySQL은 IntelliJ SSH 터널 접속을 위해 EC2 loopback 주소
+`127.0.0.1:3306`에만 연결합니다. 인터넷에서 접근할 수 있는
+`0.0.0.0:3306`으로 변경하거나 보안 그룹에 `3306` 인바운드 규칙을
+추가하지 않습니다.
+
 ## 최초 배포
 
 ```bash
@@ -56,6 +61,43 @@ curl --fail http://localhost/actuator/health
 
 ```bash
 docker compose --env-file .env.prod -f compose.prod.yaml logs --tail=200 backend
+```
+
+## IntelliJ에서 운영 MySQL 조회
+
+IntelliJ의 **Database** 도구에서 `+` → **Data Source** → **MySQL**을
+선택합니다. MySQL 드라이버가 없다면 IntelliJ가 표시하는 다운로드 버튼으로
+설치합니다.
+
+**General** 탭에는 다음 값을 입력합니다.
+
+| 항목 | 값 |
+|---|---|
+| Host | `127.0.0.1` |
+| Port | `3306` 또는 `.env.prod`의 `DB_TUNNEL_PORT` |
+| Database | `.env.prod`의 `DB_NAME` |
+| User | `.env.prod`의 `DB_USERNAME` |
+| Password | `.env.prod`의 `DB_PASSWORD` |
+
+**SSH/SSL** 탭에서 **Use SSH tunnel**을 켜고 다음 값을 입력합니다.
+
+| 항목 | 값 |
+|---|---|
+| Proxy host | EC2 공인 IP 또는 탄력적 IP |
+| Port | `22` |
+| User | `ubuntu` |
+| Authentication type | Key pair |
+| Private key file | EC2 접속용 `.pem` 파일 |
+
+**Test Connection**이 성공하면 `Schemas`에서 `dasi_find`와
+`flyway_schema_history`, `user` 테이블을 확인할 수 있습니다. 운영 회원을
+조회할 때 비밀번호 컬럼은 불필요하게 열람하거나 공유하지 않습니다.
+
+연결되지 않으면 EC2에서 loopback 포트와 컨테이너 상태를 확인합니다.
+
+```bash
+ss -lnt | grep 3306
+docker compose --env-file .env.prod -f compose.prod.yaml ps mysql
 ```
 
 ## 재배포

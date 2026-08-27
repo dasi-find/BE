@@ -23,6 +23,8 @@ services:
       start_period: 30s
     volumes:
       - mysql-data:/var/lib/mysql
+    ports:
+      - "127.0.0.1:${DB_TUNNEL_PORT:-3306}:3306"
     networks:
       - data
     mem_limit: 640m
