@@ -51,26 +51,38 @@ jobs:
             --query 'Command.CommandId' \
             --output text)"
 
-          aws ssm wait command-executed \
-            --command-id "$command_id" \
-            --instance-id "$EC2_INSTANCE_ID" || true
+          status="Pending"
+          for attempt in {1..180}; do
+            if status="$(aws ssm get-command-invocation \
+              --command-id "$command_id" \
+              --instance-id "$EC2_INSTANCE_ID" \
+              --query 'Status' \
+              --output text 2>/dev/null)"; then
+              case "$status" in
+                Pending|InProgress|Delayed)
+                  ;;
+                *)
+                  break
+                  ;;
+              esac
+            fi
 
-          status="$(aws ssm get-command-invocation \
-            --command-id "$command_id" \
-            --instance-id "$EC2_INSTANCE_ID" \
-            --query 'Status' \
-            --output text)"
+            sleep 5
+          done
 
           aws ssm get-command-invocation \
             --command-id "$command_id" \
             --instance-id "$EC2_INSTANCE_ID" \
             --query 'StandardOutputContent' \
-            --output text
+            --output text || true
 
           aws ssm get-command-invocation \
             --command-id "$command_id" \
             --instance-id "$EC2_INSTANCE_ID" \
             --query 'StandardErrorContent' \
-            --output text
+            --output text || true
 
-          test "$status" = "Success"
+          if [[ "$status" != "Success" ]]; then
+            echo "::error::SSM deployment finished with status: $status"
+            exit 1
+          fi
