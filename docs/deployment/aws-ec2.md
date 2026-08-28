@@ -109,7 +109,9 @@ cd ~/BE
 ./deploy/update-from-main.sh
 ```
 
-GitHub Actions는 `main` push를 감지해 테스트를 통과한 뒤 AWS Systems Manager로 위 스크립트를 실행합니다. GitHub에는 장기 AWS Access Key나 SSH 개인키를 저장하지 않습니다.
+GitHub Actions는 `develop` push의 BE CI가 성공하면 검증된 커밋을 `main`으로 자동 승격하고 BE CD를 호출합니다. BE CD는 AWS Systems Manager로 위 스크립트를 실행합니다. `main` push와 수동 workflow dispatch도 같은 CD를 실행하며, GitHub에는 장기 AWS Access Key나 SSH 개인키를 저장하지 않습니다.
+
+`develop` PR 검사만 성공한 상태에서는 승격하지 않습니다. PR이 `develop`에 머지된 후 실행된 push CI가 성공해야 운영 배포가 시작됩니다. GitHub Actions가 생성한 `main` 병합은 후속 push 워크플로를 자동 실행하지 않으므로 승격 워크플로가 BE CD를 명시적으로 dispatch합니다.
 
 CD는 SSM 명령의 최종 상태를 최대 15분간 확인합니다. 최초 Docker 이미지 빌드가 AWS CLI의 기본 waiter 대기 시간을 넘겨도 실제 배포 결과가 나올 때까지 기다립니다.
 
