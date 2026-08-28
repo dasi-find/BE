@@ -16,6 +16,15 @@ public record AuthTokenProperties(
         @NotNull Duration accessTtl,
         @NotNull Duration refreshTtl,
         @NotBlank String refreshCookieName,
-        boolean secureCookie
+        boolean secureCookie,
+        @NotNull RefreshTokenCookieSameSite cookieSameSite
 ) {
+    public AuthTokenProperties {
+        if (cookieSameSite == RefreshTokenCookieSameSite.NONE && !secureCookie) {
+            throw new IllegalArgumentException("SameSite=None refresh token cookies must be Secure");
+        }
+        if (refreshCookieName != null && refreshCookieName.startsWith("__Host-") && !secureCookie) {
+            throw new IllegalArgumentException("__Host- refresh token cookies must be Secure");
+        }
+    }
 }
