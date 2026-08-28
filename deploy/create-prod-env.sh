@@ -27,6 +27,7 @@ umask 077
     echo "MAIL_PASSWORD=$mail_password"
     echo "MAIL_FROM=$mail_username"
     echo "CORS_ALLOWED_ORIGINS=https://dasifind.vercel.app"
+    echo "AUTH_COOKIE_SAME_SITE=LAX"
 } > "$env_file"
 
 echo "Created $env_file with permissions 600."

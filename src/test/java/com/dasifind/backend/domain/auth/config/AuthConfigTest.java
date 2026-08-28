@@ -22,7 +22,8 @@ class AuthConfigTest {
                 Duration.ofMinutes(30),
                 Duration.ofDays(14),
                 "refreshToken",
-                false
+                false,
+                RefreshTokenCookieSameSite.LAX
         );
         JwtEncoder encoder = new AuthConfig().jwtEncoder(properties);
         Instant now = Instant.now();
