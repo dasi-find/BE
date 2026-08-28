@@ -47,7 +47,7 @@ MAIL_FROM=your-account@gmail.com
 JWT_SECRET=replace-with-at-least-32-random-characters
 ```
 
-로컬 HTTP 환경은 `refreshToken`, `AUTH_COOKIE_SECURE=false`를 사용합니다. 운영 HTTPS 환경은 반드시 `REFRESH_TOKEN_COOKIE_NAME=__Host-refresh_token`, `AUTH_COOKIE_SECURE=true`로 설정해야 합니다.
+로컬 HTTP 환경은 `refreshToken`, `AUTH_COOKIE_SECURE=false`, `AUTH_COOKIE_SAME_SITE=LAX`를 사용합니다. 운영 HTTPS 환경은 반드시 `REFRESH_TOKEN_COOKIE_NAME=__Host-refresh_token`, `AUTH_COOKIE_SECURE=true`로 설정해야 합니다. Vercel `/api` rewrite를 사용하면 `AUTH_COOKIE_SAME_SITE=LAX`, CloudFront 주소를 브라우저에서 직접 호출하면 `AUTH_COOKIE_SAME_SITE=NONE`을 사용합니다.
 
 ## 실행
 

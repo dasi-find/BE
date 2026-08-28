@@ -1,6 +1,7 @@
 package com.dasifind.backend.domain.auth.service;
 
 import com.dasifind.backend.domain.auth.config.AuthTokenProperties;
+import com.dasifind.backend.domain.auth.config.RefreshTokenCookieSameSite;
 import com.dasifind.backend.domain.auth.model.IssuedTokens;
 import com.dasifind.backend.domain.auth.repository.RefreshTokenRepository;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,8 @@ class AuthTokenServiceTest {
                 Duration.ofMinutes(30),
                 Duration.ofDays(14),
                 "__Host-refresh_token",
-                true
+                true,
+                RefreshTokenCookieSameSite.LAX
         );
         Jwt jwt = Jwt.withTokenValue("access-token")
                 .header("alg", "HS256")
@@ -72,7 +74,8 @@ class AuthTokenServiceTest {
                 Duration.ofMinutes(30),
                 Duration.ofDays(14),
                 "__Host-refresh_token",
-                true
+                true,
+                RefreshTokenCookieSameSite.LAX
         );
         AuthTokenService authTokenService = new AuthTokenService(
                 jwtEncoder,

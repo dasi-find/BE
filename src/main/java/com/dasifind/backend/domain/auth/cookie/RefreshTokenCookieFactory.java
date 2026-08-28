@@ -18,7 +18,7 @@ public class RefreshTokenCookieFactory {
                 .from(properties.refreshCookieName(), refreshToken)
                 .httpOnly(true)
                 .secure(properties.secureCookie())
-                .sameSite("Lax")
+                .sameSite(properties.cookieSameSite().attributeValue())
                 .path("/")
                 .maxAge(properties.refreshTtl())
                 .build();

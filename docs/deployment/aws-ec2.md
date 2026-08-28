@@ -124,6 +124,82 @@ EC2에 `/home/ubuntu/BE` 저장소가 없는 최초 배포 상황에서는 CD가
 - GitHub 배포 역할: 해당 EC2에 대한 Systems Manager 명령 실행 권한
 - GitHub 저장소 변수 `AWS_DEPLOY_ROLE_ARN`, `EC2_INSTANCE_ID`
 
+## CloudFront로 HTTPS 연결
+
+Vercel HTTPS 페이지에서 HTTP EC2 주소를 직접 호출하면 브라우저의
+mixed content 보안 정책에 막힙니다. CloudFront가 브라우저와는 HTTPS로,
+EC2 Nginx와는 HTTP로 통신하도록 구성합니다.
+
+AWS 콘솔의 **CloudFront** → **배포** → **배포 생성**에서 다음과 같이
+설정합니다. 원본 도메인에는 EC2 콘솔에 표시된
+`<EC2_PUBLIC_IPV4_DNS>` 값을 입력합니다. 탄력적 IP 숫자만 입력하지
+않습니다.
+
+| 항목 | 설정값 |
+|---|---|
+| 원본 유형 | 기타 원본(Custom origin) |
+| 원본 도메인 | EC2 퍼블릭 IPv4 DNS |
+| 프로토콜 | HTTP만 |
+| HTTP 포트 | `80` |
+| 뷰어 프로토콜 정책 | HTTP에서 HTTPS로 리디렉션 |
+| 허용된 HTTP 메서드 | GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE |
+| 캐시 정책 | `CachingDisabled` |
+| 원본 요청 정책 | `AllViewer` |
+| 원본 Shield | 사용 안 함 |
+| 웹 애플리케이션 방화벽(WAF) | 일단 사용 안 함 |
+| 가격 등급 | `Price Class 200`(한국 포함) |
+| 대체 도메인/CNAME | 비워 둠 |
+| SSL 인증서 | CloudFront 기본 인증서 |
+
+API 응답이 다른 사용자에게 재사용되지 않도록 AWS 관리형
+`CachingDisabled` 정책을 사용합니다. `AllViewer`는 인증 헤더, 쿠키,
+쿼리 스트링과 `Origin` 헤더를 EC2까지 전달하기 위해 필요합니다.
+
+배포 상태가 **활성화됨**이 되면 표시된
+`https://dxxxxxxxxxxxxx.cloudfront.net`에서 헬스체크를 확인합니다.
+
+```bash
+curl --fail https://dxxxxxxxxxxxxx.cloudfront.net/actuator/health
+```
+
+`{"status":"UP"}`이면 EC2 보안 그룹의 `80 / 0.0.0.0/0` 규칙을 삭제하고,
+소스를 AWS 관리형 접두사 목록
+`com.amazonaws.global.cloudfront.origin-facing`으로 지정한 `HTTP 80` 규칙으로
+교체합니다. 교체 전 CloudFront 헬스체크가 성공했는지 먼저 확인합니다.
+
+CloudFront 요금은 AWS 공식 요금 페이지의 현재 제도를 확인하고
+선택합니다. 이 구성은 Origin Shield, 실시간 로그, Lambda@Edge를
+사용하지 않으며 AWS 예산 알림은 계속 유지합니다.
+
+## Vercel에서 같은 출처로 API 연결
+
+권장 방식은 브라우저가 CloudFront 도메인을 직접 호출하지 않고,
+Vercel의 `/api` 경로를 통해 호출하는 것입니다. FE 저장소의
+`vercel.json`에 다음 rewrite를 설정합니다.
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://dxxxxxxxxxxxxx.cloudfront.net/api/:path*"
+    }
+  ]
+}
+```
+
+FE의 API 기본 주소는 외부 URL 대신 `/api`를 사용하고, 인증 요청은
+cookie credentials를 포함합니다. Vercel 외부 rewrite는 브라우저 주소를
+바꾸지 않고 API 요청을 CloudFront로 전달하므로 서드파티 쿠키에
+의존하지 않습니다. 이 방식은 운영 `.env.prod`의
+`AUTH_COOKIE_SAME_SITE=LAX`를 유지합니다.
+
+CloudFront 주소를 FE에서 직접 호출해야 하는 경우에만
+`.env.prod`의 `AUTH_COOKIE_SAME_SITE=NONE`으로 변경하고 재배포합니다.
+`SameSite=None`은 `Secure=true`와 함께만 사용할 수 있으며, 브라우저의
+서드파티 쿠키 차단 정책에 영향받을 수 있어 권장하지 않습니다.
+
 ## 재부팅 검증
 
 모든 서비스에 `restart: unless-stopped`가 적용되어 있으므로 EC2 재부팅 후 자동으로 다시 시작됩니다.
