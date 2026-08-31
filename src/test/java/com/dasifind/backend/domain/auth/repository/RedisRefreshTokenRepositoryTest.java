@@ -84,4 +84,38 @@ class RedisRefreshTokenRepositoryTest {
 
         assertThat(rotated).isFalse();
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void 사용자의_현재_세션_토큰을_원자적으로_폐기한다() {
+        when(redisTemplate.execute(
+                any(RedisScript.class),
+                eq(List.of("auth:refresh-token:token-hash")),
+                eq("7")
+        )).thenReturn(1L);
+
+        boolean revoked = repository.revoke("token-hash", 7L);
+
+        assertThat(revoked).isTrue();
+        ArgumentCaptor<RedisScript<Long>> scriptCaptor = ArgumentCaptor.forClass(RedisScript.class);
+        verify(redisTemplate).execute(
+                scriptCaptor.capture(),
+                eq(List.of("auth:refresh-token:token-hash")),
+                eq("7")
+        );
+        assertThat(scriptCaptor.getValue().getScriptAsString())
+                .contains("storedUserId ~= ARGV[1]")
+                .contains("redis.call('DEL', KEYS[1])");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void 토큰_소유자가_다르면_폐기하지_않는다() {
+        when(redisTemplate.execute(any(RedisScript.class), any(List.class), any()))
+                .thenReturn(0L);
+
+        boolean revoked = repository.revoke("other-user-token-hash", 7L);
+
+        assertThat(revoked).isFalse();
+    }
 }

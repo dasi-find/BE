@@ -11,5 +11,7 @@ public interface RefreshTokenRepository {
 
     boolean rotate(String currentTokenHash, String newTokenHash, Duration ttl);
 
+    boolean revoke(String tokenHash, Long userId);
+
     void delete(String tokenHash);
 }
