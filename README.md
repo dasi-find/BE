@@ -12,6 +12,7 @@
 - Spring Security
 - MySQL
 - Flyway
+- AWS S3
 
 ## 실행 준비
 
@@ -48,6 +49,12 @@ JWT_SECRET=replace-with-at-least-32-random-characters
 ```
 
 로컬 HTTP 환경은 `refreshToken`, `AUTH_COOKIE_SECURE=false`, `AUTH_COOKIE_SAME_SITE=LAX`를 사용합니다. 운영 HTTPS 환경은 반드시 `REFRESH_TOKEN_COOKIE_NAME=__Host-refresh_token`, `AUTH_COOKIE_SECURE=true`로 설정해야 합니다. Vercel `/api` rewrite를 사용하면 `AUTH_COOKIE_SAME_SITE=LAX`, CloudFront 주소를 브라우저에서 직접 호출하면 `AUTH_COOKIE_SAME_SITE=NONE`을 사용합니다.
+
+이미지 업로드를 로컬에서 실제로 호출하려면 `.env`의 `AWS_REGION`,
+`AWS_S3_BUCKET`을 개발용 비공개 버킷에 맞게 설정하고 AWS SDK 기본 자격증명
+체인에서 읽을 수 있는 로컬 프로필을 사용합니다. AWS Access Key는 저장소나
+`.env`에 커밋하지 않습니다. 테스트에서는 S3 저장소를 모킹하므로 실제 AWS
+자격증명이 필요하지 않습니다.
 
 ## 실행
 

@@ -8,6 +8,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -53,6 +54,16 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(400);
         assertThat(response.getBody()).isEqualTo(ApiResponse.failure(ErrorCode.INVALID_REQUEST));
+    }
+
+    @Test
+    void multipart_최대_크기를_초과하면_이미지_용량_오류로_응답한다() {
+        ResponseEntity<ApiResponse<Void>> response = exceptionHandler.handleMaxUploadSizeExceeded(
+                new MaxUploadSizeExceededException(10L * 1024 * 1024)
+        );
+
+        assertThat(response.getStatusCode().value()).isEqualTo(413);
+        assertThat(response.getBody()).isEqualTo(ApiResponse.failure(ErrorCode.IMAGE_TOO_LARGE));
     }
 
     @Test
