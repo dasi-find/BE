@@ -40,6 +40,23 @@ class RefreshTokenCookieFactoryTest {
                 .withMessageContaining("__Host-");
     }
 
+    @Test
+    void 로그아웃_시_리프레시_토큰_쿠키를_즉시_만료시킨다() {
+        RefreshTokenCookieFactory cookieFactory = new RefreshTokenCookieFactory(
+                properties(true, RefreshTokenCookieSameSite.LAX)
+        );
+
+        ResponseCookie cookie = cookieFactory.expire();
+
+        assertThat(cookie.toString())
+                .contains("__Host-refresh_token=")
+                .contains("Max-Age=0")
+                .contains("Path=/")
+                .contains("Secure")
+                .contains("HttpOnly")
+                .contains("SameSite=Lax");
+    }
+
     private AuthTokenProperties properties(boolean secure, RefreshTokenCookieSameSite sameSite) {
         return new AuthTokenProperties(
                 "dasifind",

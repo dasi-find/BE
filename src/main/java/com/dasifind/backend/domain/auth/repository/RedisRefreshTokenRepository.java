@@ -22,6 +22,14 @@ public class RedisRefreshTokenRepository implements RefreshTokenRepository {
             redis.call('DEL', KEYS[1])
             return 1
             """, Long.class);
+    private static final DefaultRedisScript<Long> REVOKE_SCRIPT = new DefaultRedisScript<>("""
+            local storedUserId = redis.call('GET', KEYS[1])
+            if not storedUserId or storedUserId ~= ARGV[1] then
+                return 0
+            end
+            redis.call('DEL', KEYS[1])
+            return 1
+            """, Long.class);
 
     private final StringRedisTemplate redisTemplate;
 
@@ -46,6 +54,16 @@ public class RedisRefreshTokenRepository implements RefreshTokenRepository {
                 ROTATE_SCRIPT,
                 List.of(KEY_PREFIX + currentTokenHash, KEY_PREFIX + newTokenHash),
                 Long.toString(ttl.toMillis())
+        );
+        return Objects.equals(result, 1L);
+    }
+
+    @Override
+    public boolean revoke(String tokenHash, Long userId) {
+        Long result = redisTemplate.execute(
+                REVOKE_SCRIPT,
+                List.of(KEY_PREFIX + tokenHash),
+                userId.toString()
         );
         return Objects.equals(result, 1L);
     }

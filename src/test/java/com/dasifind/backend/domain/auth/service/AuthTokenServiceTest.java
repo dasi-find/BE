@@ -180,6 +180,32 @@ class AuthTokenServiceTest {
         verify(refreshTokenRepository, never()).rotate(anyString(), anyString(), any());
     }
 
+    @Test
+    void 사용자의_현재_리프레시_토큰을_폐기한다() {
+        AuthTokenService authTokenService = authTokenService();
+        when(refreshTokenRepository.revoke(anyString(), eq(7L))).thenReturn(true);
+
+        authTokenService.revokeRefreshToken(7L, "refresh-token");
+
+        ArgumentCaptor<String> hashCaptor = ArgumentCaptor.forClass(String.class);
+        verify(refreshTokenRepository).revoke(hashCaptor.capture(), eq(7L));
+        assertThat(hashCaptor.getValue())
+                .hasSize(64)
+                .matches("[0-9a-f]{64}")
+                .isNotEqualTo("refresh-token");
+    }
+
+    @Test
+    void 리프레시_토큰이_없거나_소유자가_다르면_폐기를_거절한다() {
+        AuthTokenService authTokenService = authTokenService();
+        when(refreshTokenRepository.revoke(anyString(), eq(7L))).thenReturn(false);
+
+        assertThatThrownBy(() -> authTokenService.revokeRefreshToken(7L, "invalid-refresh-token"))
+                .isInstanceOf(BusinessException.class)
+                .extracting(exception -> ((BusinessException) exception).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_TOKEN);
+    }
+
     private AuthTokenService authTokenService() {
         AuthTokenProperties properties = new AuthTokenProperties(
                 "dasifind",
