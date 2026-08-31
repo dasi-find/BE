@@ -64,6 +64,16 @@ public class User {
         return new User(email, password, name, emailNotificationEnabled, now, now);
     }
 
+    public void updateProfile(String name, Boolean emailNotificationEnabled) {
+        if (name != null) {
+            this.name = name;
+        }
+        if (emailNotificationEnabled != null) {
+            this.emailNotificationEnabled = emailNotificationEnabled;
+        }
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public Long getId() {
         return id;
     }
