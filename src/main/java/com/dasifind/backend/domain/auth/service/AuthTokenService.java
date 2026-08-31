@@ -73,6 +73,13 @@ public class AuthTokenService {
         refreshTokenRepository.delete(hash(refreshToken));
     }
 
+    public void revokeRefreshToken(Long userId, String refreshToken) {
+        boolean revoked = refreshTokenRepository.revoke(hash(refreshToken), userId);
+        if (!revoked) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+    }
+
     private String issueAccessToken(Long userId) {
         Instant issuedAt = Instant.now();
         Instant expiresAt = issuedAt.plus(properties.accessTtl());
