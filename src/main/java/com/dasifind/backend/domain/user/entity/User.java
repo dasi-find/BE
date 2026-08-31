@@ -83,4 +83,8 @@ public class User {
     public boolean isEmailNotificationEnabled() {
         return emailNotificationEnabled;
     }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 }
