@@ -22,6 +22,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/auth/signup",
                                 "/api/v1/auth/login",
+                                "/api/v1/auth/token/refresh",
                                 "/api/v1/auth/email-verifications/**",
                                 "/actuator/health"
                         ).permitAll()
