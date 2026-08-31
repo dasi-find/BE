@@ -4,6 +4,8 @@ import com.dasifind.backend.domain.auth.config.AuthTokenProperties;
 import com.dasifind.backend.domain.auth.config.RefreshTokenCookieSameSite;
 import com.dasifind.backend.domain.auth.model.IssuedTokens;
 import com.dasifind.backend.domain.auth.repository.RefreshTokenRepository;
+import com.dasifind.backend.global.error.BusinessException;
+import com.dasifind.backend.global.error.ErrorCode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -14,9 +16,14 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -92,5 +99,97 @@ class AuthTokenServiceTest {
                 .hasSize(64)
                 .matches("[0-9a-f]{64}")
                 .isNotEqualTo("refresh-token");
+    }
+
+    @Test
+    void 유효한_리프레시_토큰을_새_토큰으로_교체한다() {
+        AuthTokenService authTokenService = authTokenService();
+        Jwt jwt = Jwt.withTokenValue("new-access-token")
+                .header("alg", "HS256")
+                .claim("sub", "7")
+                .build();
+        when(refreshTokenRepository.findUserId(anyString())).thenReturn(Optional.of(7L));
+        when(jwtEncoder.encode(any())).thenReturn(jwt);
+        when(refreshTokenRepository.rotate(anyString(), anyString(), eq(Duration.ofDays(14))))
+                .thenReturn(true);
+
+        IssuedTokens tokens = authTokenService.refresh("current-refresh-token");
+
+        assertThat(tokens.accessToken()).isEqualTo("new-access-token");
+        assertThat(tokens.accessTokenExpiresInSeconds()).isEqualTo(1800);
+        assertThat(tokens.refreshToken()).isNotBlank().isNotEqualTo("current-refresh-token");
+
+        ArgumentCaptor<String> lookupHashCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> currentHashCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> newHashCaptor = ArgumentCaptor.forClass(String.class);
+        verify(refreshTokenRepository).findUserId(lookupHashCaptor.capture());
+        verify(refreshTokenRepository).rotate(
+                currentHashCaptor.capture(),
+                newHashCaptor.capture(),
+                eq(Duration.ofDays(14))
+        );
+        assertThat(currentHashCaptor.getValue()).isEqualTo(lookupHashCaptor.getValue());
+        assertThat(newHashCaptor.getValue())
+                .hasSize(64)
+                .matches("[0-9a-f]{64}")
+                .isNotEqualTo(currentHashCaptor.getValue())
+                .isNotEqualTo(tokens.refreshToken());
+    }
+
+    @Test
+    void 만료되거나_폐기된_리프레시_토큰은_거절한다() {
+        AuthTokenService authTokenService = authTokenService();
+        when(refreshTokenRepository.findUserId(anyString())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authTokenService.refresh("invalid-refresh-token"))
+                .isInstanceOf(BusinessException.class)
+                .extracting(exception -> ((BusinessException) exception).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_TOKEN);
+
+        verify(jwtEncoder, never()).encode(any());
+        verify(refreshTokenRepository, never()).rotate(anyString(), anyString(), any());
+    }
+
+    @Test
+    void 동일한_리프레시_토큰이_먼저_교체되면_재사용을_거절한다() {
+        AuthTokenService authTokenService = authTokenService();
+        Jwt jwt = Jwt.withTokenValue("unused-access-token")
+                .header("alg", "HS256")
+                .claim("sub", "7")
+                .build();
+        when(refreshTokenRepository.findUserId(anyString())).thenReturn(Optional.of(7L));
+        when(jwtEncoder.encode(any())).thenReturn(jwt);
+        when(refreshTokenRepository.rotate(anyString(), anyString(), eq(Duration.ofDays(14))))
+                .thenReturn(false);
+
+        assertThatThrownBy(() -> authTokenService.refresh("already-rotated-token"))
+                .isInstanceOf(BusinessException.class)
+                .extracting(exception -> ((BusinessException) exception).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_TOKEN);
+    }
+
+    @Test
+    void 액세스_토큰_발급이_실패하면_기존_리프레시_토큰을_교체하지_않는다() {
+        AuthTokenService authTokenService = authTokenService();
+        when(refreshTokenRepository.findUserId(anyString())).thenReturn(Optional.of(7L));
+        when(jwtEncoder.encode(any())).thenThrow(new IllegalStateException("JWT encoder unavailable"));
+
+        assertThatThrownBy(() -> authTokenService.refresh("current-refresh-token"))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(refreshTokenRepository, never()).rotate(anyString(), anyString(), any());
+    }
+
+    private AuthTokenService authTokenService() {
+        AuthTokenProperties properties = new AuthTokenProperties(
+                "dasifind",
+                "test-secret-key-that-is-longer-than-32-bytes",
+                Duration.ofMinutes(30),
+                Duration.ofDays(14),
+                "__Host-refresh_token",
+                true,
+                RefreshTokenCookieSameSite.LAX
+        );
+        return new AuthTokenService(jwtEncoder, refreshTokenRepository, properties, new SecureRandom());
     }
 }

@@ -3,6 +3,8 @@ package com.dasifind.backend.domain.auth.service;
 import com.dasifind.backend.domain.auth.config.AuthTokenProperties;
 import com.dasifind.backend.domain.auth.model.IssuedTokens;
 import com.dasifind.backend.domain.auth.repository.RefreshTokenRepository;
+import com.dasifind.backend.global.error.BusinessException;
+import com.dasifind.backend.global.error.ErrorCode;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -41,6 +43,37 @@ public class AuthTokenService {
     }
 
     public IssuedTokens issue(Long userId) {
+        String accessToken = issueAccessToken(userId);
+        String refreshToken = randomToken();
+        refreshTokenRepository.save(hash(refreshToken), userId, properties.refreshTtl());
+
+        return issuedTokens(accessToken, refreshToken);
+    }
+
+    public IssuedTokens refresh(String currentRefreshToken) {
+        String currentTokenHash = hash(currentRefreshToken);
+        Long userId = refreshTokenRepository.findUserId(currentTokenHash)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
+
+        String accessToken = issueAccessToken(userId);
+        String newRefreshToken = randomToken();
+        boolean rotated = refreshTokenRepository.rotate(
+                currentTokenHash,
+                hash(newRefreshToken),
+                properties.refreshTtl()
+        );
+        if (!rotated) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        return issuedTokens(accessToken, newRefreshToken);
+    }
+
+    public void revokeRefreshToken(String refreshToken) {
+        refreshTokenRepository.delete(hash(refreshToken));
+    }
+
+    private String issueAccessToken(Long userId) {
         Instant issuedAt = Instant.now();
         Instant expiresAt = issuedAt.plus(properties.accessTtl());
         JwtClaimsSet claims = JwtClaimsSet.builder()
@@ -51,22 +84,17 @@ public class AuthTokenService {
                 .claim("tokenType", "access")
                 .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
-        String accessToken = jwtEncoder
+        return jwtEncoder
                 .encode(JwtEncoderParameters.from(header, claims))
                 .getTokenValue();
+    }
 
-        String refreshToken = randomToken();
-        refreshTokenRepository.save(hash(refreshToken), userId, properties.refreshTtl());
-
+    private IssuedTokens issuedTokens(String accessToken, String refreshToken) {
         return new IssuedTokens(
                 accessToken,
                 properties.accessTtl().toSeconds(),
                 refreshToken
         );
-    }
-
-    public void revokeRefreshToken(String refreshToken) {
-        refreshTokenRepository.delete(hash(refreshToken));
     }
 
     private String randomToken() {
