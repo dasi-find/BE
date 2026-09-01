@@ -7,7 +7,7 @@
 - 내부 통신: Spring Boot `8080`, MySQL `3306`, Redis `6379`
 - 영속 데이터: Docker named volume
 - HTTPS: CloudFront를 Nginx 앞에 연결
-- 이미지: 후속 작업에서 비공개 S3 버킷 사용
+- 이미지: 서울 리전의 비공개 S3 버킷과 1시간 Presigned URL 사용
 
 ## EC2 최초 준비
 
@@ -47,6 +47,63 @@ chmod +x deploy/create-prod-env.sh deploy/deploy.sh deploy/update-from-main.sh
 환경변수 생성 스크립트는 DB, Redis, JWT 비밀값을 임의 생성하고 `.env.prod`를 권한 `600`으로 저장합니다. Google 앱 비밀번호 입력값은 화면에 표시되지 않습니다.
 
 `.env.prod`는 Git에 커밋하거나 메신저로 공유하지 않습니다.
+
+## 비공개 S3 이미지 저장소 연결
+
+S3 콘솔에서 **범용 버킷 만들기**를 선택하고 다음 값으로 생성합니다.
+
+| 항목 | 설정값 |
+|---|---|
+| AWS 리전 | 아시아 태평양(서울) `ap-northeast-2` |
+| 버킷 이름 | 전 세계에서 고유한 이름 |
+| 객체 소유권 | ACL 비활성화(버킷 소유자 적용) |
+| 퍼블릭 액세스 차단 | 네 항목 모두 활성화 |
+| 버킷 버전 관리 | 비활성화 |
+| 기본 암호화 | SSE-S3 |
+
+버킷 정책으로 공개 권한을 추가하지 않습니다. 애플리케이션은 비공개 객체를
+업로드하고, 조회할 때만 1시간 유효한 Presigned URL을 발급합니다.
+
+EC2의 `dasifind-ec2-ssm-role` 역할에 다음 인라인 정책을 추가합니다.
+`<BUCKET_NAME>`은 생성한 버킷 이름으로 바꿉니다.
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SearchCardImageObjectAccess",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::<BUCKET_NAME>/search-card-images/*"
+    }
+  ]
+}
+```
+
+장기 Access Key는 생성하지 않습니다. Docker 컨테이너 안의 AWS SDK가 EC2
+인스턴스 역할을 IMDSv2로 읽을 수 있도록 EC2 콘솔의 **작업 → 인스턴스 설정 →
+인스턴스 메타데이터 옵션 수정**에서 다음과 같이 설정합니다.
+
+| 항목 | 설정값 |
+|---|---|
+| 인스턴스 메타데이터 서비스 | 활성화 |
+| IMDSv2 | 필수 |
+| PUT 응답 홉 제한 | `2` |
+
+기존 서버의 `.env.prod`에는 아래 두 줄을 직접 추가합니다.
+
+```bash
+AWS_REGION=ap-northeast-2
+AWS_S3_BUCKET=<BUCKET_NAME>
+```
+
+새 서버에서는 `create-prod-env.sh`가 버킷 이름을 질문하고 두 값을 생성합니다.
+S3 설정을 마치기 전에는 이미지 업로드 기능이 포함된 배포를 진행하지 않습니다.
 
 ## 상태 확인
 
