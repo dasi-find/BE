@@ -3,6 +3,8 @@ package com.dasifind.backend.domain.searchcard.image.controller;
 import com.dasifind.backend.domain.searchcard.image.dto.response.SearchCardImageUploadResponse;
 import com.dasifind.backend.domain.searchcard.image.model.SearchCardImageType;
 import com.dasifind.backend.domain.searchcard.image.service.SearchCardImageService;
+import com.dasifind.backend.global.error.BusinessException;
+import com.dasifind.backend.global.error.ErrorCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,9 +16,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -100,6 +104,47 @@ class SearchCardImageControllerTest {
         mockMvc.perform(multipart("/api/v1/search-card-images")
                         .file(file)
                         .param("imageType", "ACTUAL"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("COMMON4011"));
+    }
+
+    @Test
+    void 본인이_업로드한_이미지를_삭제한다() throws Exception {
+        mockMvc.perform(delete("/api/v1/search-card-images/{imageId}", 501L)
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isSuccess").value(true))
+                .andExpect(jsonPath("$.code").value("COMMON2001"))
+                .andExpect(jsonPath("$.result").doesNotExist());
+
+        verify(searchCardImageService).delete(7L, 501L);
+    }
+
+    @Test
+    void 존재하지_않는_이미지는_찾을_수_없음으로_응답한다() throws Exception {
+        doThrow(new BusinessException(ErrorCode.RESOURCE_NOT_FOUND))
+                .when(searchCardImageService).delete(7L, 501L);
+
+        mockMvc.perform(delete("/api/v1/search-card-images/{imageId}", 501L)
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("COMMON4041"));
+    }
+
+    @Test
+    void 타인이_업로드한_이미지는_접근_권한_없음으로_응답한다() throws Exception {
+        doThrow(new BusinessException(ErrorCode.FORBIDDEN))
+                .when(searchCardImageService).delete(7L, 501L);
+
+        mockMvc.perform(delete("/api/v1/search-card-images/{imageId}", 501L)
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("COMMON4031"));
+    }
+
+    @Test
+    void 이미지_삭제는_인증이_필요하다() throws Exception {
+        mockMvc.perform(delete("/api/v1/search-card-images/{imageId}", 501L))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("COMMON4011"));
     }

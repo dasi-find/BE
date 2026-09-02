@@ -7,6 +7,8 @@ import com.dasifind.backend.global.api.ApiResponse;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,5 +38,14 @@ public class SearchCardImageController {
                 imageType
         );
         return ApiResponse.success(response);
+    }
+
+    @DeleteMapping("/{imageId}")
+    public ApiResponse<Void> delete(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long imageId
+    ) {
+        searchCardImageService.delete(Long.valueOf(jwt.getSubject()), imageId);
+        return ApiResponse.success();
     }
 }
