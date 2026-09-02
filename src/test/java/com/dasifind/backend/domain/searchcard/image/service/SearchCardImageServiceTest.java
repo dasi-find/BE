@@ -21,12 +21,14 @@ import org.springframework.util.unit.DataSize;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -145,6 +147,74 @@ class SearchCardImageServiceTest {
         verify(imageStorage, never()).upload(anyString(), anyString(), any());
     }
 
+    @Test
+    void 본인이_업로드한_연결된_이미지를_DB와_S3에서_삭제한다() {
+        SearchCardImage image = image(7L, "search-card-images/7/image.png");
+        ReflectionTestUtils.setField(image, "searchCardId", 31L);
+        when(userRepository.existsById(7L)).thenReturn(true);
+        when(searchCardImageRepository.findById(501L)).thenReturn(Optional.of(image));
+
+        service.delete(7L, 501L);
+
+        var inOrder = inOrder(searchCardImageRepository, imageStorage);
+        inOrder.verify(searchCardImageRepository).delete(image);
+        inOrder.verify(searchCardImageRepository).flush();
+        inOrder.verify(imageStorage).delete("search-card-images/7/image.png");
+    }
+
+    @Test
+    void 존재하지_않는_이미지는_삭제할_수_없다() {
+        when(userRepository.existsById(7L)).thenReturn(true);
+        when(searchCardImageRepository.findById(501L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.delete(7L, 501L))
+                .isInstanceOfSatisfying(BusinessException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.RESOURCE_NOT_FOUND));
+
+        verify(searchCardImageRepository, never()).delete(any());
+        verify(imageStorage, never()).delete(anyString());
+    }
+
+    @Test
+    void 타인이_업로드한_이미지는_삭제할_수_없다() {
+        SearchCardImage image = image(8L, "search-card-images/8/image.png");
+        when(userRepository.existsById(7L)).thenReturn(true);
+        when(searchCardImageRepository.findById(501L)).thenReturn(Optional.of(image));
+
+        assertThatThrownBy(() -> service.delete(7L, 501L))
+                .isInstanceOfSatisfying(BusinessException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN));
+
+        verify(searchCardImageRepository, never()).delete(any());
+        verify(imageStorage, never()).delete(anyString());
+    }
+
+    @Test
+    void S3_삭제가_실패하면_예외를_전파한다() {
+        SearchCardImage image = image(7L, "search-card-images/7/image.png");
+        when(userRepository.existsById(7L)).thenReturn(true);
+        when(searchCardImageRepository.findById(501L)).thenReturn(Optional.of(image));
+        RuntimeException storageFailure = new RuntimeException("delete failed");
+        doThrow(storageFailure).when(imageStorage).delete(image.getStorageKey());
+
+        assertThatThrownBy(() -> service.delete(7L, 501L)).isSameAs(storageFailure);
+
+        verify(searchCardImageRepository).delete(image);
+        verify(searchCardImageRepository).flush();
+    }
+
+    @Test
+    void 토큰의_사용자가_없으면_이미지를_조회하지_않는다() {
+        when(userRepository.existsById(7L)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.delete(7L, 501L))
+                .isInstanceOfSatisfying(BusinessException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_TOKEN));
+
+        verify(searchCardImageRepository, never()).findById(any());
+        verify(imageStorage, never()).delete(anyString());
+    }
+
     private void assertError(MultipartFile file, ErrorCode errorCode) {
         assertThatThrownBy(() -> service.upload(7L, file, SearchCardImageType.ACTUAL))
                 .isInstanceOfSatisfying(BusinessException.class, exception ->
@@ -153,5 +223,15 @@ class SearchCardImageServiceTest {
 
     private byte[] pngContent() {
         return new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x01};
+    }
+
+    private SearchCardImage image(Long userId, String storageKey) {
+        return SearchCardImage.create(
+                userId,
+                storageKey,
+                SearchCardImageType.ACTUAL,
+                "image/png",
+                9
+        );
     }
 }
