@@ -11,6 +11,7 @@ import com.dasifind.backend.domain.user.repository.UserRepository;
 import com.dasifind.backend.global.error.BusinessException;
 import com.dasifind.backend.global.error.ErrorCode;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -68,6 +69,23 @@ public class SearchCardImageService {
         );
         SearchCardImage savedImage = saveWithCompensation(image, storageKey);
         return SearchCardImageUploadResponse.of(savedImage, imageUrl);
+    }
+
+    @Transactional
+    public void delete(Long userId, Long imageId) {
+        if (!userRepository.existsById(userId)) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        SearchCardImage image = searchCardImageRepository.findById(imageId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
+        if (!image.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
+        searchCardImageRepository.delete(image);
+        searchCardImageRepository.flush();
+        imageStorage.delete(image.getStorageKey());
     }
 
     private void validateFileSize(MultipartFile file) {
