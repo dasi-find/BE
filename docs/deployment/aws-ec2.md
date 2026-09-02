@@ -8,6 +8,7 @@
 - 영속 데이터: Docker named volume
 - HTTPS: CloudFront를 Nginx 앞에 연결
 - 이미지: 서울 리전의 비공개 S3 버킷과 1시간 Presigned URL 사용
+- AI: 별도 AI 서버로 JSON과 이미지 Presigned URL을 전달
 
 ## EC2 최초 준비
 
@@ -104,6 +105,21 @@ AWS_S3_BUCKET=<BUCKET_NAME>
 
 새 서버에서는 `create-prod-env.sh`가 버킷 이름을 질문하고 두 값을 생성합니다.
 S3 설정을 마치기 전에는 이미지 업로드 기능이 포함된 배포를 진행하지 않습니다.
+
+## AI 분석 서버 연결
+
+BE에는 GPT, SigLIP2, BGE-M3 같은 모델을 직접 포함하지 않습니다. BE는 공개 API
+요청을 검증하고 본인 소유 이미지의 Presigned URL을 생성한 뒤 AI 서버의
+`POST /internal/v1/search-card-analyses`로 전달합니다. AI 서버가 준비되면
+`.env.prod`에 내부 접근 가능한 주소를 추가합니다.
+
+```bash
+AI_ANALYSIS_BASE_URL=http://<AI_SERVER_HOST>:8000
+```
+
+AI 서버를 아직 배포하지 않았다면 값을 비워 둡니다. 이 경우 BE와 기존 API는
+정상 동작하고 AI 분석 요청만 `AI5031`을 반환합니다. 운영에서 테스트용 가짜
+분석 결과를 반환하지 않습니다.
 
 ## 상태 확인
 

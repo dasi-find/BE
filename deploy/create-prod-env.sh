@@ -35,6 +35,7 @@ umask 077
     echo "CORS_ALLOWED_ORIGINS=https://dasifind.vercel.app"
     echo "AWS_REGION=ap-northeast-2"
     echo "AWS_S3_BUCKET=$s3_bucket"
+    echo "AI_ANALYSIS_BASE_URL="
     echo "AUTH_COOKIE_SAME_SITE=LAX"
 } > "$env_file"
 
