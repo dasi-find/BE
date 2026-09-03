@@ -56,6 +56,21 @@ JWT_SECRET=replace-with-at-least-32-random-characters
 `.env`에 커밋하지 않습니다. 테스트에서는 S3 저장소를 모킹하므로 실제 AWS
 자격증명이 필요하지 않습니다.
 
+AI 전처리 서버는 BE와 별도 서비스로 운영합니다. BE는 사용자 입력을 검증하고
+본인 소유 이미지의 Presigned URL을 만든 뒤 AI 서버에 JSON으로 전달합니다.
+GPT 전처리, SigLIP2, BGE-M3 등 실제 모델 코드는 AI 저장소에서 관리하며 BE는
+특정 모델에 의존하지 않습니다. 로컬 AI 서버 주소는 다음처럼 설정합니다.
+
+```text
+AI_ANALYSIS_BASE_URL=http://localhost:8000
+```
+
+주소가 비어 있으면 서버는 정상 기동하지만 AI 분석 요청에는 `AI5031`을
+반환합니다. 사진은 선택 사항이며 사진 없이 분석할 때는 `imageIds`를 빈
+배열로 전달합니다. BE와 AI 사이의 요청·응답 형식은
+[`docs/integration/ai-analysis-api.md`](docs/integration/ai-analysis-api.md)를
+참고합니다.
+
 ## 실행
 
 ```bash
