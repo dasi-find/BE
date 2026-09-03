@@ -29,6 +29,12 @@ spring:
       max-request-size: 11MB
 
 app:
+  ai:
+    analysis:
+      base-url: ${AI_ANALYSIS_BASE_URL:}
+      path: /internal/v1/search-card-analyses
+      connect-timeout: 3s
+      read-timeout: 30s
   aws:
     s3:
       bucket: ${AWS_S3_BUCKET:dasifind-local}
