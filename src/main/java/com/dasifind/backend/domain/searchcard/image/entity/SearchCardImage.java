@@ -109,4 +109,11 @@ public class SearchCardImage {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+
+    public void attachTo(Long searchCardId) {
+        if (this.searchCardId != null) {
+            throw new IllegalStateException("이미 수색카드에 연결된 이미지입니다.");
+        }
+        this.searchCardId = searchCardId;
+    }
 }
