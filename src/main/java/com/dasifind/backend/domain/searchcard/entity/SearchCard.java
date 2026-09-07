@@ -149,6 +149,33 @@ public class SearchCard {
         );
     }
 
+    public void update(
+            Long analysisId,
+            String category,
+            String itemName,
+            List<String> colors,
+            String brand,
+            String material,
+            String featureDescription,
+            LocalDate lostDate,
+            LocalTime lostStartTime,
+            LocalTime lostEndTime,
+            LocalDateTime now
+    ) {
+        this.analysisId = analysisId;
+        this.category = category;
+        this.itemName = itemName;
+        this.colors.clear();
+        this.colors.addAll(colors);
+        this.brand = brand;
+        this.material = material;
+        this.featureDescription = featureDescription;
+        this.lostDate = lostDate;
+        this.lostStartTime = lostStartTime;
+        this.lostEndTime = lostEndTime;
+        this.updatedAt = now;
+    }
+
     public Long getId() {
         return id;
     }

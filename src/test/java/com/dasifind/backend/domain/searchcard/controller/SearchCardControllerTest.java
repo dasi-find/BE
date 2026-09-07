@@ -7,11 +7,13 @@ import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailLostL
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResponse;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListItemResponse;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResponse;
 import com.dasifind.backend.domain.searchcard.image.model.SearchCardImageType;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCreateService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardDetailQueryService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardQueryService;
+import com.dasifind.backend.domain.searchcard.service.SearchCardUpdateService;
 import com.dasifind.backend.global.error.BusinessException;
 import com.dasifind.backend.global.error.ErrorCode;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -57,6 +60,64 @@ class SearchCardControllerTest {
 
     @MockitoBean
     private SearchCardDetailQueryService searchCardDetailQueryService;
+
+    @MockitoBean
+    private SearchCardUpdateService searchCardUpdateService;
+
+    @Test
+    void 재분석_결과로_활성_수색카드를_수정한다() throws Exception {
+        when(searchCardUpdateService.update(eq(7L), eq(12L), any()))
+                .thenReturn(new SearchCardUpdateResponse(
+                        12L,
+                        SearchCardStatus.ACTIVE,
+                        false
+                ));
+
+        mockMvc.perform(patch("/api/v1/search-cards/12")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validUpdateRequest()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.searchCardId").value(12))
+                .andExpect(jsonPath("$.result.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.result.rematchScheduled").value(false));
+
+        verify(searchCardUpdateService).update(eq(7L), eq(12L), any());
+    }
+
+    @Test
+    void 활성_상태가_아니면_수색카드를_수정할_수_없다() throws Exception {
+        when(searchCardUpdateService.update(eq(7L), eq(12L), any()))
+                .thenThrow(new BusinessException(ErrorCode.INVALID_SEARCH_CARD_STATUS));
+
+        mockMvc.perform(patch("/api/v1/search-cards/12")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validUpdateRequest()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("SEARCH4091"));
+    }
+
+    @Test
+    void 수정_요청에_새_분석_ID가_없으면_거절한다() throws Exception {
+        String request = validUpdateRequest().replace("\"analysisId\": 902,", "");
+
+        mockMvc.perform(patch("/api/v1/search-cards/12")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON4004"));
+    }
+
+    @Test
+    void 수색카드_수정은_인증이_필요하다() throws Exception {
+        mockMvc.perform(patch("/api/v1/search-cards/12")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validUpdateRequest()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("COMMON4011"));
+    }
 
     @Test
     void 본인의_수색카드_상세를_조회한다() throws Exception {
@@ -330,6 +391,30 @@ class SearchCardControllerTest {
                     "latitude": 37.3947,
                     "longitude": 127.1112,
                     "description": null
+                  }
+                }
+                """;
+    }
+
+    private String validUpdateRequest() {
+        return """
+                {
+                  "analysisId": 902,
+                  "category": "WALLET",
+                  "itemName": "남색 카드지갑",
+                  "color": ["NAVY", "BLACK"],
+                  "brand": null,
+                  "material": "LEATHER",
+                  "featureDescription": "오른쪽 아래에 큰 긁힘이 있어요.",
+                  "lostDate": "2026-08-17",
+                  "lostStartTime": "18:00",
+                  "lostEndTime": "21:00",
+                  "lostLocation": {
+                    "placeName": "판교역 스타벅스",
+                    "address": "경기도 성남시 분당구 판교역로 166",
+                    "latitude": 37.3947,
+                    "longitude": 127.1112,
+                    "description": "카페에서 마지막으로 사용했습니다."
                   }
                 }
                 """;
