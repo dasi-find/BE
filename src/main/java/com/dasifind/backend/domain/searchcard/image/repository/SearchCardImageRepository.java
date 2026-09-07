@@ -17,4 +17,6 @@ public interface SearchCardImageRepository extends JpaRepository<SearchCardImage
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<SearchCardImage> findAllByIdInOrderByIdAsc(Collection<Long> ids);
+
+    List<SearchCardImage> findAllBySearchCardIdOrderByIdAsc(Long searchCardId);
 }
