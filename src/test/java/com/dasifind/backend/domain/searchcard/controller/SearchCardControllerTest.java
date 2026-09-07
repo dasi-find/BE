@@ -1,5 +1,6 @@
 package com.dasifind.backend.domain.searchcard.controller;
 
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCloseResponse;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResponse;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailAnalysisResponse;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailImageResponse;
@@ -10,6 +11,7 @@ import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListRespons
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResponse;
 import com.dasifind.backend.domain.searchcard.image.model.SearchCardImageType;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
+import com.dasifind.backend.domain.searchcard.service.SearchCardCloseService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCreateService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardDetailQueryService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardQueryService;
@@ -63,6 +65,85 @@ class SearchCardControllerTest {
 
     @MockitoBean
     private SearchCardUpdateService searchCardUpdateService;
+
+    @MockitoBean
+    private SearchCardCloseService searchCardCloseService;
+
+    @Test
+    void 추천_후보로_물건을_찾아_수색을_종료한다() throws Exception {
+        when(searchCardCloseService.close(eq(7L), eq(12L), any()))
+                .thenReturn(new SearchCardCloseResponse(
+                        12L,
+                        SearchCardStatus.FOUND,
+                        LocalDateTime.of(2026, 8, 25, 15, 0)
+                ));
+
+        mockMvc.perform(post("/api/v1/search-cards/12/close")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "status": "FOUND",
+                                  "reason": "FOUND_BY_RECOMMENDATION"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.searchCardId").value(12))
+                .andExpect(jsonPath("$.result.status").value("FOUND"))
+                .andExpect(jsonPath("$.result.closedAt").value("2026-08-25T15:00:00"));
+
+        verify(searchCardCloseService).close(eq(7L), eq(12L), any());
+    }
+
+    @Test
+    void 종료_상태와_사유_조합이_올바르지_않으면_거절한다() throws Exception {
+        when(searchCardCloseService.close(eq(7L), eq(12L), any()))
+                .thenThrow(new BusinessException(ErrorCode.INVALID_REQUEST));
+
+        mockMvc.perform(post("/api/v1/search-cards/12/close")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "status": "CLOSED",
+                                  "reason": "FOUND_OTHER_WAY"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON4001"));
+    }
+
+    @Test
+    void 이미_종료된_수색카드는_다시_종료할_수_없다() throws Exception {
+        when(searchCardCloseService.close(eq(7L), eq(12L), any()))
+                .thenThrow(new BusinessException(ErrorCode.INVALID_SEARCH_CARD_STATUS));
+
+        mockMvc.perform(post("/api/v1/search-cards/12/close")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "status": "CLOSED",
+                                  "reason": "SEARCH_STOPPED"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("SEARCH4091"));
+    }
+
+    @Test
+    void 수색_종료는_인증이_필요하다() throws Exception {
+        mockMvc.perform(post("/api/v1/search-cards/12/close")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "status": "CLOSED",
+                                  "reason": "SEARCH_STOPPED"
+                                }
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("COMMON4011"));
+    }
 
     @Test
     void 재분석_결과로_활성_수색카드를_수정한다() throws Exception {

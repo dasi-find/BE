@@ -1,12 +1,15 @@
 package com.dasifind.backend.domain.searchcard.controller;
 
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCloseRequest;
 import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCreateRequest;
 import com.dasifind.backend.domain.searchcard.dto.request.SearchCardUpdateRequest;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCloseResponse;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResponse;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResponse;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResponse;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResponse;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
+import com.dasifind.backend.domain.searchcard.service.SearchCardCloseService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCreateService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardDetailQueryService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardQueryService;
@@ -36,17 +39,20 @@ public class SearchCardController {
     private final SearchCardQueryService searchCardQueryService;
     private final SearchCardDetailQueryService searchCardDetailQueryService;
     private final SearchCardUpdateService searchCardUpdateService;
+    private final SearchCardCloseService searchCardCloseService;
 
     public SearchCardController(
             SearchCardCreateService searchCardCreateService,
             SearchCardQueryService searchCardQueryService,
             SearchCardDetailQueryService searchCardDetailQueryService,
-            SearchCardUpdateService searchCardUpdateService
+            SearchCardUpdateService searchCardUpdateService,
+            SearchCardCloseService searchCardCloseService
     ) {
         this.searchCardCreateService = searchCardCreateService;
         this.searchCardQueryService = searchCardQueryService;
         this.searchCardDetailQueryService = searchCardDetailQueryService;
         this.searchCardUpdateService = searchCardUpdateService;
+        this.searchCardCloseService = searchCardCloseService;
     }
 
     @PostMapping
@@ -96,6 +102,20 @@ public class SearchCardController {
             @Valid @RequestBody SearchCardUpdateRequest request
     ) {
         SearchCardUpdateResponse response = searchCardUpdateService.update(
+                Long.valueOf(jwt.getSubject()),
+                searchCardId,
+                request
+        );
+        return ApiResponse.success(response);
+    }
+
+    @PostMapping("/{searchCardId}/close")
+    public ApiResponse<SearchCardCloseResponse> closeMySearchCard(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable @Min(1) Long searchCardId,
+            @Valid @RequestBody SearchCardCloseRequest request
+    ) {
+        SearchCardCloseResponse response = searchCardCloseService.close(
                 Long.valueOf(jwt.getSubject()),
                 searchCardId,
                 request
