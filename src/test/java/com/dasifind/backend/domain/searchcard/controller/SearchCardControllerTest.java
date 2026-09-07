@@ -1,10 +1,16 @@
 package com.dasifind.backend.domain.searchcard.controller;
 
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailAnalysisResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailImageResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailLostLocationResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResponse;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListItemResponse;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResponse;
+import com.dasifind.backend.domain.searchcard.image.model.SearchCardImageType;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCreateService;
+import com.dasifind.backend.domain.searchcard.service.SearchCardDetailQueryService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardQueryService;
 import com.dasifind.backend.global.error.BusinessException;
 import com.dasifind.backend.global.error.ErrorCode;
@@ -17,16 +23,18 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -46,6 +54,101 @@ class SearchCardControllerTest {
 
     @MockitoBean
     private SearchCardQueryService searchCardQueryService;
+
+    @MockitoBean
+    private SearchCardDetailQueryService searchCardDetailQueryService;
+
+    @Test
+    void 본인의_수색카드_상세를_조회한다() throws Exception {
+        SearchCardDetailResponse response = new SearchCardDetailResponse(
+                12L,
+                "WALLET",
+                "남색 카드지갑",
+                List.of("NAVY", "BLACK"),
+                null,
+                "LEATHER",
+                "앞면 중앙에 은색 로고가 있어요.",
+                List.of(new SearchCardDetailImageResponse(
+                        501L,
+                        "https://download.example.com/501",
+                        SearchCardImageType.REFERENCE
+                )),
+                LocalDate.of(2026, 8, 17),
+                LocalTime.of(18, 0),
+                LocalTime.of(20, 0),
+                new SearchCardDetailLostLocationResponse(
+                        "판교역 스타벅스",
+                        "경기도 성남시 분당구 판교역로 166",
+                        new BigDecimal("37.3947000"),
+                        new BigDecimal("127.1112000"),
+                        "카페에서 나올 때까지는 있었어요."
+                ),
+                new SearchCardDetailAnalysisResponse(
+                        List.of("앞면 은색 로고"),
+                        "preprocess-v1"
+                ),
+                SearchCardStatus.ACTIVE,
+                LocalDateTime.of(2026, 9, 16, 23, 59, 59),
+                0,
+                null
+        );
+        when(searchCardDetailQueryService.getMySearchCard(7L, 12L)).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/search-cards/12")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.id").value(12))
+                .andExpect(jsonPath("$.result.category").value("WALLET"))
+                .andExpect(jsonPath("$.result.colors[0]").value("NAVY"))
+                .andExpect(jsonPath("$.result.brand").value(nullValue()))
+                .andExpect(jsonPath("$.result.images[0].id").value(501))
+                .andExpect(jsonPath("$.result.images[0].imageType").value("REFERENCE"))
+                .andExpect(jsonPath("$.result.lostLocation.placeName")
+                        .value("판교역 스타벅스"))
+                .andExpect(jsonPath("$.result.analysis.features[0]")
+                        .value("앞면 은색 로고"))
+                .andExpect(jsonPath("$.result.candidateCount").value(0))
+                .andExpect(jsonPath("$.result.bestCandidateScore").value(nullValue()));
+
+        verify(searchCardDetailQueryService).getMySearchCard(7L, 12L);
+    }
+
+    @Test
+    void 다른_사용자의_수색카드_상세는_조회할_수_없다() throws Exception {
+        when(searchCardDetailQueryService.getMySearchCard(7L, 12L))
+                .thenThrow(new BusinessException(ErrorCode.FORBIDDEN));
+
+        mockMvc.perform(get("/api/v1/search-cards/12")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("COMMON4031"));
+    }
+
+    @Test
+    void 존재하지_않는_수색카드_상세는_조회할_수_없다() throws Exception {
+        when(searchCardDetailQueryService.getMySearchCard(7L, 999L))
+                .thenThrow(new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
+
+        mockMvc.perform(get("/api/v1/search-cards/999")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("COMMON4041"));
+    }
+
+    @Test
+    void 수색카드_상세_조회는_인증이_필요하다() throws Exception {
+        mockMvc.perform(get("/api/v1/search-cards/12"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("COMMON4011"));
+    }
+
+    @Test
+    void 수색카드_ID는_양수여야_한다() throws Exception {
+        mockMvc.perform(get("/api/v1/search-cards/0")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON4001"));
+    }
 
     @Test
     void 내_수색카드를_기본_페이징으로_최근순_조회한다() throws Exception {
