@@ -84,6 +84,22 @@ public class LostLocation {
         );
     }
 
+    public void update(
+            String placeName,
+            String address,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            String description,
+            LocalDateTime now
+    ) {
+        this.placeName = placeName;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.description = description;
+        this.updatedAt = now;
+    }
+
     public Long getId() {
         return id;
     }
