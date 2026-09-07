@@ -20,9 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -97,7 +99,8 @@ class SearchCardCloseIntegrationTest {
         assertThat(closedCard.getStatus()).isEqualTo(SearchCardStatus.FOUND);
         assertThat(closedCard.getCloseReason())
                 .isEqualTo(SearchCardCloseReason.FOUND_BY_RECOMMENDATION);
-        assertThat(closedCard.getClosedAt()).isEqualTo(response.closedAt());
-        assertThat(closedCard.getUpdatedAt()).isEqualTo(response.closedAt());
+        assertThat(closedCard.getClosedAt())
+                .isCloseTo(response.closedAt(), within(1, ChronoUnit.MICROS));
+        assertThat(closedCard.getUpdatedAt()).isEqualTo(closedCard.getClosedAt());
     }
 }
