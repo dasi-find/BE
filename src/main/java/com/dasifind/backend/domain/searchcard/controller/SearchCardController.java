@@ -2,24 +2,38 @@ package com.dasifind.backend.domain.searchcard.controller;
 
 import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCreateRequest;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResponse;
+import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCreateService;
+import com.dasifind.backend.domain.searchcard.service.SearchCardQueryService;
 import com.dasifind.backend.global.api.ApiResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Validated
 @RequestMapping("/api/v1/search-cards")
 public class SearchCardController {
 
     private final SearchCardCreateService searchCardCreateService;
+    private final SearchCardQueryService searchCardQueryService;
 
-    public SearchCardController(SearchCardCreateService searchCardCreateService) {
+    public SearchCardController(
+            SearchCardCreateService searchCardCreateService,
+            SearchCardQueryService searchCardQueryService
+    ) {
         this.searchCardCreateService = searchCardCreateService;
+        this.searchCardQueryService = searchCardQueryService;
     }
 
     @PostMapping
@@ -30,6 +44,22 @@ public class SearchCardController {
         SearchCardCreateResponse response = searchCardCreateService.create(
                 Long.valueOf(jwt.getSubject()),
                 request
+        );
+        return ApiResponse.success(response);
+    }
+
+    @GetMapping
+    public ApiResponse<SearchCardListResponse> getMySearchCards(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(required = false) SearchCardStatus status,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size
+    ) {
+        SearchCardListResponse response = searchCardQueryService.getMySearchCards(
+                Long.valueOf(jwt.getSubject()),
+                status,
+                page,
+                size
         );
         return ApiResponse.success(response);
     }

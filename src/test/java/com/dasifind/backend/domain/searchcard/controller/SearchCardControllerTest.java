@@ -1,8 +1,11 @@
 package com.dasifind.backend.domain.searchcard.controller;
 
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListItemResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResponse;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCreateService;
+import com.dasifind.backend.domain.searchcard.service.SearchCardQueryService;
 import com.dasifind.backend.global.error.BusinessException;
 import com.dasifind.backend.global.error.ErrorCode;
 import org.junit.jupiter.api.Test;
@@ -15,13 +18,17 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -36,6 +43,100 @@ class SearchCardControllerTest {
 
     @MockitoBean
     private SearchCardCreateService searchCardCreateService;
+
+    @MockitoBean
+    private SearchCardQueryService searchCardQueryService;
+
+    @Test
+    void 내_수색카드를_기본_페이징으로_최근순_조회한다() throws Exception {
+        when(searchCardQueryService.getMySearchCards(7L, null, 0, 20))
+                .thenReturn(new SearchCardListResponse(
+                        List.of(new SearchCardListItemResponse(
+                                12L,
+                                "남색 카드지갑",
+                                SearchCardStatus.ACTIVE,
+                                LocalDate.of(2026, 8, 17),
+                                "판교역 스타벅스",
+                                null,
+                                LocalDateTime.of(2026, 9, 16, 23, 59, 59)
+                        )),
+                        0,
+                        20,
+                        1,
+                        false
+                ));
+
+        mockMvc.perform(get("/api/v1/search-cards")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.content[0].id").value(12))
+                .andExpect(jsonPath("$.result.content[0].itemName").value("남색 카드지갑"))
+                .andExpect(jsonPath("$.result.content[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$.result.content[0].lostDate").value("2026-08-17"))
+                .andExpect(jsonPath("$.result.content[0].lostPlaceName").value("판교역 스타벅스"))
+                .andExpect(jsonPath("$.result.content[0].bestCandidateScore").value(nullValue()))
+                .andExpect(jsonPath("$.result.content[0].searchExpiresAt")
+                        .value("2026-09-16T23:59:59"))
+                .andExpect(jsonPath("$.result.page").value(0))
+                .andExpect(jsonPath("$.result.size").value(20))
+                .andExpect(jsonPath("$.result.totalElements").value(1))
+                .andExpect(jsonPath("$.result.hasNext").value(false));
+
+        verify(searchCardQueryService).getMySearchCards(7L, null, 0, 20);
+    }
+
+    @Test
+    void 상태와_페이지를_지정해_내_수색카드를_조회한다() throws Exception {
+        when(searchCardQueryService.getMySearchCards(7L, SearchCardStatus.CLOSED, 1, 10))
+                .thenReturn(new SearchCardListResponse(List.of(), 1, 10, 11, false));
+
+        mockMvc.perform(get("/api/v1/search-cards")
+                        .param("status", "CLOSED")
+                        .param("page", "1")
+                        .param("size", "10")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.content").isEmpty())
+                .andExpect(jsonPath("$.result.page").value(1))
+                .andExpect(jsonPath("$.result.size").value(10));
+
+        verify(searchCardQueryService)
+                .getMySearchCards(7L, SearchCardStatus.CLOSED, 1, 10);
+    }
+
+    @Test
+    void 존재하지_않는_상태이면_잘못된_요청으로_응답한다() throws Exception {
+        mockMvc.perform(get("/api/v1/search-cards")
+                        .param("status", "UNKNOWN")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON4001"));
+    }
+
+    @Test
+    void 페이지가_음수이면_잘못된_요청으로_응답한다() throws Exception {
+        mockMvc.perform(get("/api/v1/search-cards")
+                        .param("page", "-1")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON4001"));
+    }
+
+    @Test
+    void 페이지_크기가_최대값을_초과하면_잘못된_요청으로_응답한다() throws Exception {
+        mockMvc.perform(get("/api/v1/search-cards")
+                        .param("size", "101")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON4001"));
+    }
+
+    @Test
+    void 수색카드_목록_조회는_인증이_필요하다() throws Exception {
+        mockMvc.perform(get("/api/v1/search-cards"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("COMMON4011"));
+    }
 
     @Test
     void 수색카드를_생성하고_30일_수색을_시작한다() throws Exception {
