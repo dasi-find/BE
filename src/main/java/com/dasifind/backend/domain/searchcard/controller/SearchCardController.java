@@ -1,13 +1,16 @@
 package com.dasifind.backend.domain.searchcard.controller;
 
 import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCreateRequest;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardUpdateRequest;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResponse;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResponse;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResponse;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCreateService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardDetailQueryService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardQueryService;
+import com.dasifind.backend.domain.searchcard.service.SearchCardUpdateService;
 import com.dasifind.backend.global.api.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -17,6 +20,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,15 +35,18 @@ public class SearchCardController {
     private final SearchCardCreateService searchCardCreateService;
     private final SearchCardQueryService searchCardQueryService;
     private final SearchCardDetailQueryService searchCardDetailQueryService;
+    private final SearchCardUpdateService searchCardUpdateService;
 
     public SearchCardController(
             SearchCardCreateService searchCardCreateService,
             SearchCardQueryService searchCardQueryService,
-            SearchCardDetailQueryService searchCardDetailQueryService
+            SearchCardDetailQueryService searchCardDetailQueryService,
+            SearchCardUpdateService searchCardUpdateService
     ) {
         this.searchCardCreateService = searchCardCreateService;
         this.searchCardQueryService = searchCardQueryService;
         this.searchCardDetailQueryService = searchCardDetailQueryService;
+        this.searchCardUpdateService = searchCardUpdateService;
     }
 
     @PostMapping
@@ -78,6 +85,20 @@ public class SearchCardController {
         SearchCardDetailResponse response = searchCardDetailQueryService.getMySearchCard(
                 Long.valueOf(jwt.getSubject()),
                 searchCardId
+        );
+        return ApiResponse.success(response);
+    }
+
+    @PatchMapping("/{searchCardId}")
+    public ApiResponse<SearchCardUpdateResponse> updateMySearchCard(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable @Min(1) Long searchCardId,
+            @Valid @RequestBody SearchCardUpdateRequest request
+    ) {
+        SearchCardUpdateResponse response = searchCardUpdateService.update(
+                Long.valueOf(jwt.getSubject()),
+                searchCardId,
+                request
         );
         return ApiResponse.success(response);
     }
