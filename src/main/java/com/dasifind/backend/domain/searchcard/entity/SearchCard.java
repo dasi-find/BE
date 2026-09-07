@@ -1,5 +1,6 @@
 package com.dasifind.backend.domain.searchcard.entity;
 
+import com.dasifind.backend.domain.searchcard.model.SearchCardCloseReason;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -67,6 +68,13 @@ public class SearchCard {
 
     @Column(name = "search_expires_at", nullable = false)
     private LocalDateTime searchExpiresAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "close_reason", length = 40)
+    private SearchCardCloseReason closeReason;
+
+    @Column(name = "closed_at")
+    private LocalDateTime closedAt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -176,6 +184,17 @@ public class SearchCard {
         this.updatedAt = now;
     }
 
+    public void close(
+            SearchCardStatus status,
+            SearchCardCloseReason closeReason,
+            LocalDateTime now
+    ) {
+        this.status = status;
+        this.closeReason = closeReason;
+        this.closedAt = now;
+        this.updatedAt = now;
+    }
+
     public Long getId() {
         return id;
     }
@@ -230,6 +249,14 @@ public class SearchCard {
 
     public LocalDateTime getSearchExpiresAt() {
         return searchExpiresAt;
+    }
+
+    public SearchCardCloseReason getCloseReason() {
+        return closeReason;
+    }
+
+    public LocalDateTime getClosedAt() {
+        return closedAt;
     }
 
     public LocalDateTime getCreatedAt() {
