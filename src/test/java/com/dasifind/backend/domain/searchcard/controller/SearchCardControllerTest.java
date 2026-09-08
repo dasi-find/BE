@@ -14,6 +14,7 @@ import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCloseService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCreateService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardDetailQueryService;
+import com.dasifind.backend.domain.searchcard.service.SearchCardDeleteService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardQueryService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardUpdateService;
 import com.dasifind.backend.global.error.BusinessException;
@@ -41,6 +42,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -68,6 +70,49 @@ class SearchCardControllerTest {
 
     @MockitoBean
     private SearchCardCloseService searchCardCloseService;
+
+    @MockitoBean
+    private SearchCardDeleteService searchCardDeleteService;
+
+    @Test
+    void 본인의_수색카드와_종속_데이터를_삭제한다() throws Exception {
+        mockMvc.perform(delete("/api/v1/search-cards/12")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isSuccess").value(true))
+                .andExpect(jsonPath("$.result").value(nullValue()));
+
+        verify(searchCardDeleteService).delete(7L, 12L);
+    }
+
+    @Test
+    void 다른_사용자의_수색카드는_삭제할_수_없다() throws Exception {
+        doThrow(new BusinessException(ErrorCode.FORBIDDEN))
+                .when(searchCardDeleteService).delete(7L, 12L);
+
+        mockMvc.perform(delete("/api/v1/search-cards/12")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("COMMON4031"));
+    }
+
+    @Test
+    void 존재하지_않는_수색카드는_삭제할_수_없다() throws Exception {
+        doThrow(new BusinessException(ErrorCode.RESOURCE_NOT_FOUND))
+                .when(searchCardDeleteService).delete(7L, 999L);
+
+        mockMvc.perform(delete("/api/v1/search-cards/999")
+                        .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("COMMON4041"));
+    }
+
+    @Test
+    void 수색카드_삭제는_인증이_필요하다() throws Exception {
+        mockMvc.perform(delete("/api/v1/search-cards/12"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("COMMON4011"));
+    }
 
     @Test
     void 추천_후보로_물건을_찾아_수색을_종료한다() throws Exception {
