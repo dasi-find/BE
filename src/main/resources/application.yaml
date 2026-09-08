@@ -45,6 +45,8 @@ app:
     orphan-retention: 24h
     cleanup-interval: 1h
     cleanup-initial-delay: 1h
+    deletion-cleanup-interval: 1m
+    deletion-cleanup-initial-delay: 10s
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   mail:

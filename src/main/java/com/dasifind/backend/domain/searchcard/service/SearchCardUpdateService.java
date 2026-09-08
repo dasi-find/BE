@@ -58,8 +58,11 @@ public class SearchCardUpdateService {
         LostLocation lostLocation = lostLocationRepository.findBySearchCardId(searchCardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
         LocalDateTime now = LocalDateTime.now();
+        Long previousAnalysisId = searchCard.getAnalysisId();
         updateSearchCard(searchCard, request, now);
         updateLostLocation(lostLocation, request.lostLocation(), now);
+        searchCardRepository.flush();
+        searchCardAnalysisRepository.deleteById(previousAnalysisId);
 
         return SearchCardUpdateResponse.from(searchCard);
     }

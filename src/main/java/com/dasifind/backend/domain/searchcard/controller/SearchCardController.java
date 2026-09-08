@@ -12,6 +12,7 @@ import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCloseService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCreateService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardDetailQueryService;
+import com.dasifind.backend.domain.searchcard.service.SearchCardDeleteService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardQueryService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardUpdateService;
 import com.dasifind.backend.global.api.ApiResponse;
@@ -22,6 +23,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,19 +42,22 @@ public class SearchCardController {
     private final SearchCardDetailQueryService searchCardDetailQueryService;
     private final SearchCardUpdateService searchCardUpdateService;
     private final SearchCardCloseService searchCardCloseService;
+    private final SearchCardDeleteService searchCardDeleteService;
 
     public SearchCardController(
             SearchCardCreateService searchCardCreateService,
             SearchCardQueryService searchCardQueryService,
             SearchCardDetailQueryService searchCardDetailQueryService,
             SearchCardUpdateService searchCardUpdateService,
-            SearchCardCloseService searchCardCloseService
+            SearchCardCloseService searchCardCloseService,
+            SearchCardDeleteService searchCardDeleteService
     ) {
         this.searchCardCreateService = searchCardCreateService;
         this.searchCardQueryService = searchCardQueryService;
         this.searchCardDetailQueryService = searchCardDetailQueryService;
         this.searchCardUpdateService = searchCardUpdateService;
         this.searchCardCloseService = searchCardCloseService;
+        this.searchCardDeleteService = searchCardDeleteService;
     }
 
     @PostMapping
@@ -121,5 +126,14 @@ public class SearchCardController {
                 request
         );
         return ApiResponse.success(response);
+    }
+
+    @DeleteMapping("/{searchCardId}")
+    public ApiResponse<Void> deleteMySearchCard(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable @Min(1) Long searchCardId
+    ) {
+        searchCardDeleteService.delete(Long.valueOf(jwt.getSubject()), searchCardId);
+        return ApiResponse.success();
     }
 }

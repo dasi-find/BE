@@ -123,6 +123,8 @@ class SearchCardUpdateIntegrationTest {
         assertThat(updatedLocation.getPlaceName()).isEqualTo("판교역 스타벅스");
         assertThat(updatedLocation.getDescription()).isEqualTo("카페에서 마지막으로 사용했습니다.");
         assertThat(maintainedImage.getSearchCardId()).isEqualTo(searchCard.getId());
+        assertThat(searchCardAnalysisRepository.findById(oldAnalysis.getId())).isEmpty();
+        assertThat(searchCardAnalysisRepository.findById(newAnalysis.getId())).isPresent();
     }
 
     private SearchCardAnalysis saveAnalysis(Long userId, String color) {
