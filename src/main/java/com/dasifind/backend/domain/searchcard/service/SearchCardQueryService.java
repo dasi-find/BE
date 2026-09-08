@@ -1,7 +1,7 @@
 package com.dasifind.backend.domain.searchcard.service;
 
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListItemResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListItemResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResDTO;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
@@ -47,7 +47,7 @@ public class SearchCardQueryService {
         this.userRepository = userRepository;
     }
 
-    public SearchCardListResponse getMySearchCards(
+    public SearchCardListResDTO getMySearchCards(
             Long userId,
             SearchCardStatus status,
             int page,
@@ -62,14 +62,14 @@ public class SearchCardQueryService {
                 : searchCardRepository.findByUserIdAndStatus(userId, status, pageable);
 
         Map<Long, LostLocation> locationsBySearchCardId = findLocations(searchCards.getContent());
-        List<SearchCardListItemResponse> content = searchCards.getContent().stream()
-                .map(searchCard -> SearchCardListItemResponse.from(
+        List<SearchCardListItemResDTO> content = searchCards.getContent().stream()
+                .map(searchCard -> SearchCardListItemResDTO.from(
                         searchCard,
                         locationsBySearchCardId.get(searchCard.getId())
                 ))
                 .toList();
 
-        return SearchCardListResponse.from(searchCards, content);
+        return SearchCardListResDTO.from(searchCards, content);
     }
 
     private void validateUser(Long userId) {

@@ -1,6 +1,6 @@
 package com.dasifind.backend.domain.searchcard.analysis.controller;
 
-import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResponse;
+import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.service.SearchCardAnalysisQueryService;
 import com.dasifind.backend.domain.searchcard.analysis.service.SearchCardAnalysisService;
 import com.dasifind.backend.global.error.BusinessException;
@@ -44,7 +44,7 @@ class SearchCardAnalysisControllerTest {
     @Test
     void 사진_없이_AI_분석을_요청한다() throws Exception {
         when(searchCardAnalysisService.analyze(eq(7L), any())).thenReturn(
-                new SearchCardAnalysisResponse(
+                new SearchCardAnalysisResDTO(
                         801L,
                         "WALLET",
                         "CARD_WALLET",
@@ -148,8 +148,8 @@ class SearchCardAnalysisControllerTest {
                 .andExpect(jsonPath("$.code").value("COMMON4011"));
     }
 
-    private SearchCardAnalysisResponse analysisResponse() {
-        return new SearchCardAnalysisResponse(
+    private SearchCardAnalysisResDTO analysisResponse() {
+        return new SearchCardAnalysisResDTO(
                 801L,
                 "WALLET",
                 "CARD_WALLET",

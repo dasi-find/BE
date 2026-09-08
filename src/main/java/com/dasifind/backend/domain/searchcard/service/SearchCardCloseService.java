@@ -1,7 +1,7 @@
 package com.dasifind.backend.domain.searchcard.service;
 
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCloseRequest;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCloseResponse;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCloseReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCloseResDTO;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.model.SearchCardCloseReason;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
@@ -29,10 +29,10 @@ public class SearchCardCloseService {
     }
 
     @Transactional
-    public SearchCardCloseResponse close(
+    public SearchCardCloseResDTO close(
             Long userId,
             Long searchCardId,
-            SearchCardCloseRequest request
+            SearchCardCloseReqDTO request
     ) {
         validateUser(userId);
         SearchCard searchCard = searchCardRepository.findByIdForUpdate(searchCardId)
@@ -42,7 +42,7 @@ public class SearchCardCloseService {
         validateStatusAndReason(request.status(), request.reason());
 
         searchCard.close(request.status(), request.reason(), LocalDateTime.now());
-        return SearchCardCloseResponse.from(searchCard);
+        return SearchCardCloseResDTO.from(searchCard);
     }
 
     private void validateUser(Long userId) {

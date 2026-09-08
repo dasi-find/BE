@@ -1,6 +1,6 @@
 package com.dasifind.backend.domain.auth.security;
 
-import com.dasifind.backend.global.api.ApiResponse;
+import com.dasifind.backend.global.api.ApiResDTO;
 import com.dasifind.backend.global.error.ErrorCode;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
@@ -23,6 +23,6 @@ public class ApiSecurityErrorWriter {
         response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        objectMapper.writeValue(response.getOutputStream(), ApiResponse.failure(errorCode));
+        objectMapper.writeValue(response.getOutputStream(), ApiResDTO.failure(errorCode));
     }
 }

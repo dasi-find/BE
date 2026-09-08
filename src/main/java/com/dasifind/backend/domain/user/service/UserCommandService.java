@@ -1,7 +1,7 @@
 package com.dasifind.backend.domain.user.service;
 
-import com.dasifind.backend.domain.user.dto.request.UpdateMyProfileRequest;
-import com.dasifind.backend.domain.user.dto.response.UpdateMyProfileResponse;
+import com.dasifind.backend.domain.user.dto.request.UpdateMyProfileReqDTO;
+import com.dasifind.backend.domain.user.dto.response.UpdateMyProfileResDTO;
 import com.dasifind.backend.domain.user.entity.User;
 import com.dasifind.backend.domain.user.repository.UserRepository;
 import com.dasifind.backend.global.error.BusinessException;
@@ -19,7 +19,7 @@ public class UserCommandService {
     }
 
     @Transactional
-    public UpdateMyProfileResponse updateMyProfile(Long userId, UpdateMyProfileRequest request) {
+    public UpdateMyProfileResDTO updateMyProfile(Long userId, UpdateMyProfileReqDTO request) {
         String normalizedName = normalizeName(request.name());
         if (normalizedName == null && request.emailNotificationEnabled() == null) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST);
@@ -28,7 +28,7 @@ public class UserCommandService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
 
         user.updateProfile(normalizedName, request.emailNotificationEnabled());
-        return UpdateMyProfileResponse.from(user);
+        return UpdateMyProfileResDTO.from(user);
     }
 
     private String normalizeName(String name) {

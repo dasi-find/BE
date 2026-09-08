@@ -1,9 +1,9 @@
 package com.dasifind.backend.domain.auth.model;
 
-import com.dasifind.backend.domain.auth.dto.response.LoginResponse;
+import com.dasifind.backend.domain.auth.dto.response.LoginResDTO;
 
 public record LoginResult(
-        LoginResponse response,
+        LoginResDTO response,
         String refreshToken
 ) {
 }

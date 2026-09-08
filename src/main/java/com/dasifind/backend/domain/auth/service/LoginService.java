@@ -1,8 +1,8 @@
 package com.dasifind.backend.domain.auth.service;
 
-import com.dasifind.backend.domain.auth.dto.request.LoginRequest;
-import com.dasifind.backend.domain.auth.dto.response.AuthUserResponse;
-import com.dasifind.backend.domain.auth.dto.response.LoginResponse;
+import com.dasifind.backend.domain.auth.dto.request.LoginReqDTO;
+import com.dasifind.backend.domain.auth.dto.response.AuthUserResDTO;
+import com.dasifind.backend.domain.auth.dto.response.LoginResDTO;
 import com.dasifind.backend.domain.auth.model.IssuedTokens;
 import com.dasifind.backend.domain.auth.model.LoginResult;
 import com.dasifind.backend.domain.user.entity.User;
@@ -37,7 +37,7 @@ public class LoginService {
         this.dummyPasswordHash = passwordEncoder.encode("dummy-password-for-timing-protection");
     }
 
-    public LoginResult login(LoginRequest request) {
+    public LoginResult login(LoginReqDTO request) {
         String email = normalizeEmail(request.email());
         loginAttemptService.ensureAllowed(email);
 
@@ -52,8 +52,8 @@ public class LoginService {
         User user = optionalUser.get();
         IssuedTokens tokens = authTokenService.issue(user.getId());
         loginAttemptService.clear(email);
-        LoginResponse response = new LoginResponse(
-                AuthUserResponse.from(user),
+        LoginResDTO response = new LoginResDTO(
+                AuthUserResDTO.from(user),
                 tokens.accessToken(),
                 tokens.accessTokenExpiresInSeconds()
         );

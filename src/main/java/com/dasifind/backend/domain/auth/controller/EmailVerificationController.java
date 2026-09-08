@@ -1,11 +1,11 @@
 package com.dasifind.backend.domain.auth.controller;
 
-import com.dasifind.backend.domain.auth.dto.request.EmailVerificationConfirmRequest;
-import com.dasifind.backend.domain.auth.dto.request.EmailVerificationSendRequest;
-import com.dasifind.backend.domain.auth.dto.response.EmailVerificationConfirmResponse;
-import com.dasifind.backend.domain.auth.dto.response.EmailVerificationSendResponse;
+import com.dasifind.backend.domain.auth.dto.request.EmailVerificationConfirmReqDTO;
+import com.dasifind.backend.domain.auth.dto.request.EmailVerificationSendReqDTO;
+import com.dasifind.backend.domain.auth.dto.response.EmailVerificationConfirmResDTO;
+import com.dasifind.backend.domain.auth.dto.response.EmailVerificationSendResDTO;
 import com.dasifind.backend.domain.auth.service.EmailVerificationService;
-import com.dasifind.backend.global.api.ApiResponse;
+import com.dasifind.backend.global.api.ApiResDTO;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,18 +24,18 @@ public class EmailVerificationController {
     }
 
     @PostMapping
-    public ApiResponse<EmailVerificationSendResponse> send(
-            @Valid @RequestBody EmailVerificationSendRequest request
+    public ApiResDTO<EmailVerificationSendResDTO> send(
+            @Valid @RequestBody EmailVerificationSendReqDTO request
     ) {
-        return ApiResponse.success(emailVerificationService.send(request.email()));
+        return ApiResDTO.success(emailVerificationService.send(request.email()));
     }
 
     @PostMapping("/{verificationId}/confirm")
-    public ApiResponse<EmailVerificationConfirmResponse> confirm(
+    public ApiResDTO<EmailVerificationConfirmResDTO> confirm(
             @PathVariable String verificationId,
-            @Valid @RequestBody EmailVerificationConfirmRequest request
+            @Valid @RequestBody EmailVerificationConfirmReqDTO request
     ) {
-        return ApiResponse.success(emailVerificationService.confirm(
+        return ApiResDTO.success(emailVerificationService.confirm(
                 verificationId,
                 request.verificationCode()
         ));

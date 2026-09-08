@@ -1,7 +1,7 @@
 package com.dasifind.backend.domain.searchcard.image.service;
 
 import com.dasifind.backend.domain.searchcard.image.config.SearchCardImageProperties;
-import com.dasifind.backend.domain.searchcard.image.dto.response.SearchCardImageUploadResponse;
+import com.dasifind.backend.domain.searchcard.image.dto.response.SearchCardImageUploadResDTO;
 import com.dasifind.backend.domain.searchcard.image.entity.SearchCardImage;
 import com.dasifind.backend.domain.searchcard.image.model.SearchCardImageType;
 import com.dasifind.backend.domain.searchcard.image.repository.SearchCardImageRepository;
@@ -71,7 +71,7 @@ class SearchCardImageServiceTest {
                     return image;
                 });
 
-        SearchCardImageUploadResponse response = service.upload(
+        SearchCardImageUploadResDTO response = service.upload(
                 7L,
                 file,
                 SearchCardImageType.REFERENCE

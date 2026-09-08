@@ -1,8 +1,8 @@
 package com.dasifind.backend.domain.auth.service;
 
 import com.dasifind.backend.domain.auth.config.EmailVerificationProperties;
-import com.dasifind.backend.domain.auth.dto.response.EmailVerificationConfirmResponse;
-import com.dasifind.backend.domain.auth.dto.response.EmailVerificationSendResponse;
+import com.dasifind.backend.domain.auth.dto.response.EmailVerificationConfirmResDTO;
+import com.dasifind.backend.domain.auth.dto.response.EmailVerificationSendResDTO;
 import com.dasifind.backend.domain.auth.mail.VerificationEmailSender;
 import com.dasifind.backend.domain.auth.model.EmailVerificationState;
 import com.dasifind.backend.domain.auth.repository.EmailVerificationRepository;
@@ -88,7 +88,7 @@ class EmailVerificationServiceTest {
     void 인증번호를_안전하게_저장하고_이메일로_발송한다() {
         when(verificationRepository.acquireSendCooldown(anyString(), any())).thenReturn(true);
 
-        EmailVerificationSendResponse response = service.send(" USER@Example.com ");
+        EmailVerificationSendResDTO response = service.send(" USER@Example.com ");
 
         ArgumentCaptor<String> emailKeyCaptor = ArgumentCaptor.forClass(String.class);
         verify(verificationRepository).acquireSendCooldown(emailKeyCaptor.capture(), eq(Duration.ofSeconds(60)));
@@ -165,7 +165,7 @@ class EmailVerificationServiceTest {
     @Test
     void 올바른_인증번호를_확인하고_일회용_토큰을_발급한다() {
         when(verificationRepository.acquireSendCooldown(anyString(), any())).thenReturn(true);
-        EmailVerificationSendResponse sendResponse = service.send("user@example.com");
+        EmailVerificationSendResDTO sendResponse = service.send("user@example.com");
 
         ArgumentCaptor<EmailVerificationState> stateCaptor = ArgumentCaptor.forClass(EmailVerificationState.class);
         verify(verificationRepository).saveRequest(anyString(), stateCaptor.capture(), any());
@@ -177,7 +177,7 @@ class EmailVerificationServiceTest {
         when(verificationRepository.markConfirmed(sendResponse.verificationId(), Duration.ofMinutes(30)))
                 .thenReturn(true);
 
-        EmailVerificationConfirmResponse response = service.confirm(
+        EmailVerificationConfirmResDTO response = service.confirm(
                 sendResponse.verificationId(),
                 codeCaptor.getValue()
         );
@@ -237,7 +237,7 @@ class EmailVerificationServiceTest {
 
     private EmailVerificationState sentState(String email) {
         when(verificationRepository.acquireSendCooldown(anyString(), any())).thenReturn(true);
-        EmailVerificationSendResponse response = service.send(email);
+        EmailVerificationSendResDTO response = service.send(email);
         ArgumentCaptor<EmailVerificationState> stateCaptor = ArgumentCaptor.forClass(EmailVerificationState.class);
         verify(verificationRepository).saveRequest(eq(response.verificationId()), stateCaptor.capture(), any());
         return stateCaptor.getValue();

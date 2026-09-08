@@ -1,6 +1,6 @@
 package com.dasifind.backend.domain.searchcard.image.controller;
 
-import com.dasifind.backend.domain.searchcard.image.dto.response.SearchCardImageUploadResponse;
+import com.dasifind.backend.domain.searchcard.image.dto.response.SearchCardImageUploadResDTO;
 import com.dasifind.backend.domain.searchcard.image.model.SearchCardImageType;
 import com.dasifind.backend.domain.searchcard.image.service.SearchCardImageService;
 import com.dasifind.backend.global.error.BusinessException;
@@ -44,7 +44,7 @@ class SearchCardImageControllerTest {
                 new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47}
         );
         when(searchCardImageService.upload(any(), any(), any())).thenReturn(
-                new SearchCardImageUploadResponse(
+                new SearchCardImageUploadResDTO(
                         501L,
                         "https://presigned.example/image",
                         SearchCardImageType.REFERENCE

@@ -1,6 +1,6 @@
 package com.dasifind.backend.domain.user.service;
 
-import com.dasifind.backend.domain.user.dto.response.MyProfileResponse;
+import com.dasifind.backend.domain.user.dto.response.MyProfileResDTO;
 import com.dasifind.backend.domain.user.entity.User;
 import com.dasifind.backend.domain.user.repository.UserRepository;
 import com.dasifind.backend.global.error.BusinessException;
@@ -36,7 +36,7 @@ class UserQueryServiceTest {
         ReflectionTestUtils.setField(user, "createdAt", createdAt);
         when(userRepository.findById(7L)).thenReturn(Optional.of(user));
 
-        MyProfileResponse response = userQueryService.getMyProfile(7L);
+        MyProfileResDTO response = userQueryService.getMyProfile(7L);
 
         assertThat(response.id()).isEqualTo(7L);
         assertThat(response.email()).isEqualTo("hello@dasifind.kr");

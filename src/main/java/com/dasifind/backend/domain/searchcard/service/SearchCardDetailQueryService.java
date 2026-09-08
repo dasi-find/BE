@@ -2,8 +2,8 @@ package com.dasifind.backend.domain.searchcard.service;
 
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailImageResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailImageResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResDTO;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.image.repository.SearchCardImageRepository;
@@ -45,7 +45,7 @@ public class SearchCardDetailQueryService {
         this.imageStorage = imageStorage;
     }
 
-    public SearchCardDetailResponse getMySearchCard(Long userId, Long searchCardId) {
+    public SearchCardDetailResDTO getMySearchCard(Long userId, Long searchCardId) {
         validateUser(userId);
         SearchCard searchCard = searchCardRepository.findById(searchCardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
@@ -55,16 +55,16 @@ public class SearchCardDetailQueryService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
         SearchCardAnalysis analysis = searchCardAnalysisRepository.findById(searchCard.getAnalysisId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
-        List<SearchCardDetailImageResponse> images = searchCardImageRepository
+        List<SearchCardDetailImageResDTO> images = searchCardImageRepository
                 .findAllBySearchCardIdOrderByIdAsc(searchCardId)
                 .stream()
-                .map(image -> SearchCardDetailImageResponse.of(
+                .map(image -> SearchCardDetailImageResDTO.of(
                         image,
                         imageStorage.createDownloadUrl(image.getStorageKey())
                 ))
                 .toList();
 
-        return SearchCardDetailResponse.of(searchCard, lostLocation, analysis, images);
+        return SearchCardDetailResDTO.of(searchCard, lostLocation, analysis, images);
     }
 
     private void validateUser(Long userId) {

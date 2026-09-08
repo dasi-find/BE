@@ -1,11 +1,11 @@
 package com.dasifind.backend.domain.auth.controller;
 
 import com.dasifind.backend.domain.auth.cookie.RefreshTokenCookieFactory;
-import com.dasifind.backend.domain.auth.dto.request.LoginRequest;
-import com.dasifind.backend.domain.auth.dto.response.LoginResponse;
+import com.dasifind.backend.domain.auth.dto.request.LoginReqDTO;
+import com.dasifind.backend.domain.auth.dto.response.LoginResDTO;
 import com.dasifind.backend.domain.auth.model.LoginResult;
 import com.dasifind.backend.domain.auth.service.LoginService;
-import com.dasifind.backend.global.api.ApiResponse;
+import com.dasifind.backend.global.api.ApiResDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -28,13 +28,13 @@ public class LoginController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(
-            @Valid @RequestBody LoginRequest request
+    public ResponseEntity<ApiResDTO<LoginResDTO>> login(
+            @Valid @RequestBody LoginReqDTO request
     ) {
         LoginResult result = loginService.login(request);
         ResponseCookie refreshTokenCookie = refreshTokenCookieFactory.create(result.refreshToken());
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                .body(ApiResponse.success(result.response()));
+                .body(ApiResDTO.success(result.response()));
     }
 }

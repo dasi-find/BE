@@ -1,11 +1,11 @@
 package com.dasifind.backend.domain.user.controller;
 
-import com.dasifind.backend.domain.user.dto.request.UpdateMyProfileRequest;
-import com.dasifind.backend.domain.user.dto.response.MyProfileResponse;
-import com.dasifind.backend.domain.user.dto.response.UpdateMyProfileResponse;
+import com.dasifind.backend.domain.user.dto.request.UpdateMyProfileReqDTO;
+import com.dasifind.backend.domain.user.dto.response.MyProfileResDTO;
+import com.dasifind.backend.domain.user.dto.response.UpdateMyProfileResDTO;
 import com.dasifind.backend.domain.user.service.UserCommandService;
 import com.dasifind.backend.domain.user.service.UserQueryService;
-import com.dasifind.backend.global.api.ApiResponse;
+import com.dasifind.backend.global.api.ApiResDTO;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,20 +30,20 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ApiResponse<MyProfileResponse> getMyProfile(@AuthenticationPrincipal Jwt jwt) {
-        MyProfileResponse response = userQueryService.getMyProfile(Long.valueOf(jwt.getSubject()));
-        return ApiResponse.success(response);
+    public ApiResDTO<MyProfileResDTO> getMyProfile(@AuthenticationPrincipal Jwt jwt) {
+        MyProfileResDTO response = userQueryService.getMyProfile(Long.valueOf(jwt.getSubject()));
+        return ApiResDTO.success(response);
     }
 
     @PatchMapping("/me")
-    public ApiResponse<UpdateMyProfileResponse> updateMyProfile(
+    public ApiResDTO<UpdateMyProfileResDTO> updateMyProfile(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestBody UpdateMyProfileRequest request
+            @RequestBody UpdateMyProfileReqDTO request
     ) {
-        UpdateMyProfileResponse response = userCommandService.updateMyProfile(
+        UpdateMyProfileResDTO response = userCommandService.updateMyProfile(
                 Long.valueOf(jwt.getSubject()),
                 request
         );
-        return ApiResponse.success(response);
+        return ApiResDTO.success(response);
     }
 }

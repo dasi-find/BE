@@ -1,7 +1,7 @@
 package com.dasifind.backend.domain.auth.controller;
 
-import com.dasifind.backend.domain.auth.dto.response.AuthUserResponse;
-import com.dasifind.backend.domain.auth.dto.response.SignupResponse;
+import com.dasifind.backend.domain.auth.dto.response.AuthUserResDTO;
+import com.dasifind.backend.domain.auth.dto.response.SignupResDTO;
 import com.dasifind.backend.domain.auth.model.SignupResult;
 import com.dasifind.backend.domain.auth.service.SignupService;
 import org.junit.jupiter.api.Test;
@@ -34,8 +34,8 @@ class SignupControllerTest {
 
     @Test
     void 회원가입_API가_사용자와_액세스_토큰을_반환하고_리프레시_토큰은_쿠키로_전달한다() throws Exception {
-        SignupResponse signupResponse = new SignupResponse(
-                new AuthUserResponse(7L, "user@example.com", "민준"),
+        SignupResDTO signupResponse = new SignupResDTO(
+                new AuthUserResDTO(7L, "user@example.com", "민준"),
                 "access-token",
                 1800
         );
