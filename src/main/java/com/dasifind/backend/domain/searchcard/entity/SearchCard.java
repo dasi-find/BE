@@ -184,6 +184,10 @@ public class SearchCard {
         this.updatedAt = now;
     }
 
+    public boolean isActiveAt(LocalDateTime now) {
+        return status == SearchCardStatus.ACTIVE && !searchExpiresAt.isBefore(now);
+    }
+
     public void close(
             SearchCardStatus status,
             SearchCardCloseReason closeReason,

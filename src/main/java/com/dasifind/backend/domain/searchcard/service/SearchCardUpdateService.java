@@ -7,7 +7,6 @@ import com.dasifind.backend.domain.searchcard.dto.request.SearchCardUpdateReqDTO
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResDTO;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
-import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
 import com.dasifind.backend.domain.searchcard.repository.LostLocationRepository;
 import com.dasifind.backend.domain.searchcard.repository.SearchCardRepository;
 import com.dasifind.backend.domain.user.repository.UserRepository;
@@ -52,12 +51,12 @@ public class SearchCardUpdateService {
         SearchCard searchCard = searchCardRepository.findByIdForUpdate(searchCardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
         validateOwner(userId, searchCard);
-        validateStatus(searchCard);
+        LocalDateTime now = LocalDateTime.now();
+        validateStatus(searchCard, now);
         validateAnalysis(userId, request.analysisId());
 
         LostLocation lostLocation = lostLocationRepository.findBySearchCardId(searchCardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
-        LocalDateTime now = LocalDateTime.now();
         Long previousAnalysisId = searchCard.getAnalysisId();
         updateSearchCard(searchCard, request, now);
         updateLostLocation(lostLocation, request.lostLocation(), now);
@@ -79,8 +78,8 @@ public class SearchCardUpdateService {
         }
     }
 
-    private void validateStatus(SearchCard searchCard) {
-        if (searchCard.getStatus() != SearchCardStatus.ACTIVE) {
+    private void validateStatus(SearchCard searchCard, LocalDateTime now) {
+        if (!searchCard.isActiveAt(now)) {
             throw new BusinessException(ErrorCode.INVALID_SEARCH_CARD_STATUS);
         }
     }

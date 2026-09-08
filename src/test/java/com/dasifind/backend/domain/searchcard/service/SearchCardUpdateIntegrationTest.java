@@ -66,7 +66,7 @@ class SearchCardUpdateIntegrationTest {
         ));
         SearchCardAnalysis oldAnalysis = saveAnalysis(user.getId(), "BLACK");
         SearchCardAnalysis newAnalysis = saveAnalysis(user.getId(), "NAVY");
-        LocalDateTime now = LocalDateTime.of(2026, 8, 18, 10, 0);
+        LocalDateTime now = LocalDateTime.now();
         SearchCard searchCard = searchCardRepository.saveAndFlush(SearchCard.create(
                 user.getId(),
                 oldAnalysis.getId(),

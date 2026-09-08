@@ -38,10 +38,11 @@ public class SearchCardCloseService {
         SearchCard searchCard = searchCardRepository.findByIdForUpdate(searchCardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
         validateOwner(userId, searchCard);
-        validateActive(searchCard);
+        LocalDateTime now = LocalDateTime.now();
+        validateActive(searchCard, now);
         validateStatusAndReason(request.status(), request.reason());
 
-        searchCard.close(request.status(), request.reason(), LocalDateTime.now());
+        searchCard.close(request.status(), request.reason(), now);
         return SearchCardCloseResDTO.from(searchCard);
     }
 
@@ -57,8 +58,8 @@ public class SearchCardCloseService {
         }
     }
 
-    private void validateActive(SearchCard searchCard) {
-        if (searchCard.getStatus() != SearchCardStatus.ACTIVE) {
+    private void validateActive(SearchCard searchCard, LocalDateTime now) {
+        if (!searchCard.isActiveAt(now)) {
             throw new BusinessException(ErrorCode.INVALID_SEARCH_CARD_STATUS);
         }
     }

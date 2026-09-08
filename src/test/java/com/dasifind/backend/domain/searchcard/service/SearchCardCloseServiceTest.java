@@ -44,6 +44,19 @@ class SearchCardCloseServiceTest {
     }
 
     @Test
+    void 상태가_ACTIVE여도_기간이_지났으면_종료할_수_없다() {
+        SearchCard card = searchCard(12L, 7L, SearchCardStatus.ACTIVE);
+        ReflectionTestUtils.setField(card, "searchExpiresAt", LocalDateTime.now().minusMinutes(1));
+        givenOwnedCard(card);
+
+        assertError(() -> service.close(7L, 12L,
+                request(SearchCardStatus.FOUND, SearchCardCloseReason.FOUND_OTHER_WAY)),
+                ErrorCode.INVALID_SEARCH_CARD_STATUS);
+        assertThat(card.getStatus()).isEqualTo(SearchCardStatus.ACTIVE);
+        assertThat(card.getClosedAt()).isNull();
+    }
+
+    @Test
     void 추천_후보로_찾은_활성_수색카드를_FOUND로_종료한다() {
         SearchCard searchCard = searchCard(12L, 7L, SearchCardStatus.ACTIVE);
         givenOwnedCard(searchCard);
@@ -216,7 +229,7 @@ class SearchCardCloseServiceTest {
                 LocalDate.of(2026, 8, 17),
                 null,
                 null,
-                LocalDateTime.of(2026, 8, 18, 10, 0)
+                LocalDateTime.now()
         );
         ReflectionTestUtils.setField(searchCard, "id", id);
         ReflectionTestUtils.setField(searchCard, "status", status);

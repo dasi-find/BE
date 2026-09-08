@@ -91,6 +91,12 @@ Spring Security가 추가된 상태이므로 인증 설정 구현 전에는 임�
 
 ## 테스트 및 빌드
 
+수색카드는 생성일 기준 30일째 `23:59:59`까지 유효합니다. 자동 만료 작업은
+시작 10초 후부터 1분 주기로 만료 시각을 지난 `ACTIVE` 카드를 `EXPIRED`로 전환합니다.
+`app.search-card.expiration-interval`, `app.search-card.expiration-initial-delay`로
+주기를 조정할 수 있습니다. 만료된 카드의 수정·수색 종료 요청은 작업 실행 전에도
+거절하며, 조회·삭제는 가능합니다. 만료 시 데이터는 보존됩니다.
+
 요청 DTO의 클래스명과 파일명은 `ReqDTO`, 응답 DTO는 `ResDTO` 접미사를 사용합니다.
 예: `LoginReqDTO.java`, `LoginResDTO.java`. 공통 응답은 `ApiResDTO`, AI 연동 DTO에도
 같은 규칙을 적용합니다. 도메인별 `dto/request`, `dto/response` 패키지 구조를 유지합니다.
