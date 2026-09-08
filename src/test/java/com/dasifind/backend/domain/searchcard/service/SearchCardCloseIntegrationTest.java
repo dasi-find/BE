@@ -81,7 +81,7 @@ class SearchCardCloseIntegrationTest {
                 LocalDate.of(2026, 8, 17),
                 null,
                 null,
-                LocalDateTime.of(2026, 8, 18, 10, 0)
+                LocalDateTime.now()
         ));
 
         SearchCardCloseResDTO response = service.close(
