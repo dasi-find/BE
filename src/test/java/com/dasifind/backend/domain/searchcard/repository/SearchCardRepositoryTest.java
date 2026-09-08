@@ -5,6 +5,7 @@ import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
+import com.dasifind.backend.domain.searchcard.model.SearchCardCloseReason;
 import com.dasifind.backend.domain.user.entity.User;
 import com.dasifind.backend.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,46 @@ class SearchCardRepositoryTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Test
+    void 만료_시각을_지난_ACTIVE만_갱신하고_재실행해도_종료정보를_유지한다() {
+        User owner = userRepository.save(User.create(
+                "expiration@example.com", "encoded", "민준", true));
+        LocalDateTime createdAt = LocalDateTime.of(2026, 8, 1, 12, 0);
+        SearchCard due = saveSearchCard(owner, "만료 대상", SearchCardStatus.ACTIVE, createdAt);
+        SearchCard future = saveSearchCard(owner, "유효", SearchCardStatus.ACTIVE, createdAt.plusDays(1));
+        SearchCard found = saveSearchCard(owner, "찾음", SearchCardStatus.ACTIVE, createdAt);
+        SearchCard closed = saveSearchCard(owner, "중단", SearchCardStatus.ACTIVE, createdAt);
+        LocalDateTime manuallyClosedAt = createdAt.plusDays(2);
+        found.close(SearchCardStatus.FOUND, SearchCardCloseReason.FOUND_OTHER_WAY, manuallyClosedAt);
+        closed.close(SearchCardStatus.CLOSED, SearchCardCloseReason.SEARCH_STOPPED, manuallyClosedAt);
+        LocalDateTime boundary = due.getSearchExpiresAt();
+
+        assertThat(searchCardRepository.expireDueCards(boundary)).isZero();
+        LocalDateTime now = boundary.plusSeconds(1);
+        assertThat(searchCardRepository.expireDueCards(now)).isEqualTo(1);
+
+        SearchCard expired = searchCardRepository.findById(due.getId()).orElseThrow();
+        assertThat(expired.getStatus()).isEqualTo(SearchCardStatus.EXPIRED);
+        assertThat(expired.getClosedAt()).isEqualTo(boundary);
+        assertThat(expired.getUpdatedAt()).isEqualTo(now);
+        assertThat(expired.getCloseReason()).isNull();
+        assertThat(expired.getColors()).containsExactly("BLACK");
+        assertThat(analysisRepository.existsById(expired.getAnalysisId())).isTrue();
+        assertThat(searchCardRepository.findById(future.getId()).orElseThrow().getStatus())
+                .isEqualTo(SearchCardStatus.ACTIVE);
+        SearchCard preservedFound = searchCardRepository.findById(found.getId()).orElseThrow();
+        assertThat(preservedFound.getStatus()).isEqualTo(SearchCardStatus.FOUND);
+        assertThat(preservedFound.getCloseReason()).isEqualTo(SearchCardCloseReason.FOUND_OTHER_WAY);
+        assertThat(preservedFound.getClosedAt()).isEqualTo(manuallyClosedAt);
+        SearchCard preservedClosed = searchCardRepository.findById(closed.getId()).orElseThrow();
+        assertThat(preservedClosed.getStatus()).isEqualTo(SearchCardStatus.CLOSED);
+        assertThat(preservedClosed.getCloseReason()).isEqualTo(SearchCardCloseReason.SEARCH_STOPPED);
+        assertThat(preservedClosed.getClosedAt()).isEqualTo(manuallyClosedAt);
+
+        assertThat(searchCardRepository.expireDueCards(now.plusSeconds(1))).isZero();
+        assertThat(searchCardRepository.findById(due.getId()).orElseThrow().getUpdatedAt()).isEqualTo(now);
+    }
 
     @Test
     void 본인의_수색카드만_최근_생성순으로_조회한다() {

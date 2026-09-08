@@ -62,6 +62,19 @@ class SearchCardUpdateServiceTest {
     }
 
     @Test
+    void 상태가_ACTIVE여도_기간이_지나면_수정할_수_없다() {
+        SearchCard card = searchCard(12L, 7L, 801L, SearchCardStatus.ACTIVE);
+        ReflectionTestUtils.setField(card, "searchExpiresAt", LocalDateTime.now().minusMinutes(1));
+        when(userRepository.existsById(7L)).thenReturn(true);
+        when(searchCardRepository.findByIdForUpdate(12L)).thenReturn(Optional.of(card));
+
+        assertError(() -> service.update(7L, 12L, request()), ErrorCode.INVALID_SEARCH_CARD_STATUS);
+
+        verify(searchCardAnalysisRepository, never()).findByIdForUpdate(902L);
+        assertThat(card.getAnalysisId()).isEqualTo(801L);
+    }
+
+    @Test
     void 새_분석_결과와_전체_수정본으로_수색카드를_수정한다() {
         SearchCard searchCard = searchCard(12L, 7L, 801L, SearchCardStatus.ACTIVE);
         LostLocation location = location(12L);
@@ -234,7 +247,7 @@ class SearchCardUpdateServiceTest {
                 LocalDate.of(2026, 8, 16),
                 null,
                 null,
-                LocalDateTime.of(2026, 8, 18, 10, 0)
+                LocalDateTime.now()
         );
         ReflectionTestUtils.setField(searchCard, "id", id);
         ReflectionTestUtils.setField(searchCard, "status", status);

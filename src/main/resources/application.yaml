@@ -29,6 +29,9 @@ spring:
       max-request-size: 11MB
 
 app:
+  search-card:
+    expiration-interval: 1m
+    expiration-initial-delay: 10s
   ai:
     analysis:
       base-url: ${AI_ANALYSIS_BASE_URL:}
