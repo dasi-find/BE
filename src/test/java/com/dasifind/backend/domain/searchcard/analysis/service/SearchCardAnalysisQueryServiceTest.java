@@ -1,7 +1,7 @@
 package com.dasifind.backend.domain.searchcard.analysis.service;
 
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
-import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
+import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
 import com.dasifind.backend.domain.user.repository.UserRepository;
@@ -46,7 +46,7 @@ class SearchCardAnalysisQueryServiceTest {
         when(userRepository.existsById(7L)).thenReturn(true);
         when(repository.findById(801L)).thenReturn(Optional.of(analysis));
 
-        SearchCardAnalysisResponse response = service.get(7L, 801L);
+        SearchCardAnalysisResDTO response = service.get(7L, 801L);
 
         assertThat(response.analysisId()).isEqualTo(801L);
         assertThat(response.colors()).containsExactly("NAVY", "BLACK");
@@ -88,7 +88,7 @@ class SearchCardAnalysisQueryServiceTest {
     private SearchCardAnalysis analysis(Long userId) {
         SearchCardAnalysis analysis = SearchCardAnalysis.create(
                 userId,
-                new AiAnalysisClientResponse(
+                new AiAnalysisClientResDTO(
                         "WALLET",
                         "CARD_WALLET",
                         List.of("NAVY", "BLACK"),

@@ -1,8 +1,8 @@
 package com.dasifind.backend.domain.auth.service;
 
-import com.dasifind.backend.domain.auth.dto.request.SignupRequest;
-import com.dasifind.backend.domain.auth.dto.response.AuthUserResponse;
-import com.dasifind.backend.domain.auth.dto.response.SignupResponse;
+import com.dasifind.backend.domain.auth.dto.request.SignupReqDTO;
+import com.dasifind.backend.domain.auth.dto.response.AuthUserResDTO;
+import com.dasifind.backend.domain.auth.dto.response.SignupResDTO;
 import com.dasifind.backend.domain.auth.model.IssuedTokens;
 import com.dasifind.backend.domain.auth.model.SignupResult;
 import com.dasifind.backend.domain.user.entity.User;
@@ -41,7 +41,7 @@ public class SignupService {
     }
 
     @Transactional
-    public SignupResult signup(SignupRequest request) {
+    public SignupResult signup(SignupReqDTO request) {
         String email = normalizeEmail(request.email());
         if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
@@ -68,8 +68,8 @@ public class SignupService {
             revokeRefreshTokenAfterFailure(tokens.refreshToken(), exception);
             throw exception;
         }
-        SignupResponse response = new SignupResponse(
-                AuthUserResponse.from(savedUser),
+        SignupResDTO response = new SignupResDTO(
+                AuthUserResDTO.from(savedUser),
                 tokens.accessToken(),
                 tokens.accessTokenExpiresInSeconds()
         );

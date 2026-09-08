@@ -1,9 +1,9 @@
 package com.dasifind.backend.domain.searchcard.service;
 
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResDTO;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.image.entity.SearchCardImage;
@@ -87,7 +87,7 @@ class SearchCardDetailQueryServiceTest {
         when(imageStorage.createDownloadUrl("first.jpg")).thenReturn("https://download/first");
         when(imageStorage.createDownloadUrl("second.jpg")).thenReturn("https://download/second");
 
-        SearchCardDetailResponse response = service.getMySearchCard(7L, 12L);
+        SearchCardDetailResDTO response = service.getMySearchCard(7L, 12L);
 
         assertThat(response.id()).isEqualTo(12L);
         assertThat(response.category()).isEqualTo("WALLET");
@@ -114,7 +114,7 @@ class SearchCardDetailQueryServiceTest {
         when(searchCardImageRepository.findAllBySearchCardIdOrderByIdAsc(12L))
                 .thenReturn(List.of());
 
-        SearchCardDetailResponse response = service.getMySearchCard(7L, 12L);
+        SearchCardDetailResDTO response = service.getMySearchCard(7L, 12L);
 
         assertThat(response.images()).isEmpty();
         verify(imageStorage, never()).createDownloadUrl("unused");
@@ -210,7 +210,7 @@ class SearchCardDetailQueryServiceTest {
     private SearchCardAnalysis analysis(Long id, Long userId) {
         SearchCardAnalysis analysis = SearchCardAnalysis.create(
                 userId,
-                new AiAnalysisClientResponse(
+                new AiAnalysisClientResDTO(
                         "WALLET",
                         "CARD_WALLET",
                         List.of("NAVY"),

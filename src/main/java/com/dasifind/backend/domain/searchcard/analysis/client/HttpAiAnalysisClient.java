@@ -21,17 +21,17 @@ public class HttpAiAnalysisClient implements AiAnalysisClient {
     }
 
     @Override
-    public AiAnalysisClientResponse analyze(AiAnalysisClientRequest request) {
+    public AiAnalysisClientResDTO analyze(AiAnalysisClientReqDTO request) {
         if (!properties.isConfigured()) {
             throw new BusinessException(ErrorCode.AI_SERVICE_UNAVAILABLE);
         }
 
         try {
-            AiAnalysisClientResponse response = restClient.post()
+            AiAnalysisClientResDTO response = restClient.post()
                     .uri(properties.endpoint())
                     .body(request)
                     .retrieve()
-                    .body(AiAnalysisClientResponse.class);
+                    .body(AiAnalysisClientResDTO.class);
             if (response == null) {
                 throw new BusinessException(ErrorCode.AI_ANALYSIS_FAILED);
             }

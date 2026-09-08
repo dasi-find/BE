@@ -1,6 +1,6 @@
 package com.dasifind.backend.domain.searchcard.analysis.service;
 
-import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResponse;
+import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
 import com.dasifind.backend.domain.user.repository.UserRepository;
@@ -24,7 +24,7 @@ public class SearchCardAnalysisQueryService {
         this.userRepository = userRepository;
     }
 
-    public SearchCardAnalysisResponse get(Long userId, Long analysisId) {
+    public SearchCardAnalysisResDTO get(Long userId, Long analysisId) {
         if (!userRepository.existsById(userId)) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
@@ -35,6 +35,6 @@ public class SearchCardAnalysisQueryService {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
 
-        return SearchCardAnalysisResponse.from(analysis);
+        return SearchCardAnalysisResDTO.from(analysis);
     }
 }

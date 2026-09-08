@@ -1,6 +1,6 @@
 package com.dasifind.backend.domain.searchcard.service;
 
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
@@ -67,7 +67,7 @@ class SearchCardDeleteIntegrationTest {
         SearchCardAnalysis analysis = searchCardAnalysisRepository.saveAndFlush(
                 SearchCardAnalysis.create(
                         user.getId(),
-                        new AiAnalysisClientResponse(
+                        new AiAnalysisClientResDTO(
                                 "WALLET",
                                 "CARD_WALLET",
                                 List.of("NAVY"),

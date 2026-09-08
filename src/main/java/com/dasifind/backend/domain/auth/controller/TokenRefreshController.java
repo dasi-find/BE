@@ -2,10 +2,10 @@ package com.dasifind.backend.domain.auth.controller;
 
 import com.dasifind.backend.domain.auth.cookie.RefreshTokenCookieFactory;
 import com.dasifind.backend.domain.auth.cookie.RefreshTokenCookieResolver;
-import com.dasifind.backend.domain.auth.dto.response.TokenRefreshResponse;
+import com.dasifind.backend.domain.auth.dto.response.TokenRefreshResDTO;
 import com.dasifind.backend.domain.auth.model.IssuedTokens;
 import com.dasifind.backend.domain.auth.service.AuthTokenService;
-import com.dasifind.backend.global.api.ApiResponse;
+import com.dasifind.backend.global.api.ApiResDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -33,18 +33,18 @@ public class TokenRefreshController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<TokenRefreshResponse>> refresh(HttpServletRequest request) {
+    public ResponseEntity<ApiResDTO<TokenRefreshResDTO>> refresh(HttpServletRequest request) {
         String refreshToken = refreshTokenCookieResolver.resolveRequired(request);
         IssuedTokens tokens = authTokenService.refresh(refreshToken);
         ResponseCookie refreshTokenCookie = refreshTokenCookieFactory.create(tokens.refreshToken());
-        TokenRefreshResponse response = new TokenRefreshResponse(
+        TokenRefreshResDTO response = new TokenRefreshResDTO(
                 tokens.accessToken(),
                 tokens.accessTokenExpiresInSeconds()
         );
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                .body(ApiResponse.success(response));
+                .body(ApiResDTO.success(response));
     }
 
 }

@@ -1,13 +1,13 @@
 package com.dasifind.backend.domain.searchcard.controller;
 
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCloseRequest;
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCreateRequest;
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardUpdateRequest;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCloseResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResponse;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCloseReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCreateReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardUpdateReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCloseResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResDTO;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCloseService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCreateService;
@@ -15,7 +15,7 @@ import com.dasifind.backend.domain.searchcard.service.SearchCardDetailQueryServi
 import com.dasifind.backend.domain.searchcard.service.SearchCardDeleteService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardQueryService;
 import com.dasifind.backend.domain.searchcard.service.SearchCardUpdateService;
-import com.dasifind.backend.global.api.ApiResponse;
+import com.dasifind.backend.global.api.ApiResDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -61,79 +61,79 @@ public class SearchCardController {
     }
 
     @PostMapping
-    public ApiResponse<SearchCardCreateResponse> create(
+    public ApiResDTO<SearchCardCreateResDTO> create(
             @AuthenticationPrincipal Jwt jwt,
-            @Valid @RequestBody SearchCardCreateRequest request
+            @Valid @RequestBody SearchCardCreateReqDTO request
     ) {
-        SearchCardCreateResponse response = searchCardCreateService.create(
+        SearchCardCreateResDTO response = searchCardCreateService.create(
                 Long.valueOf(jwt.getSubject()),
                 request
         );
-        return ApiResponse.success(response);
+        return ApiResDTO.success(response);
     }
 
     @GetMapping
-    public ApiResponse<SearchCardListResponse> getMySearchCards(
+    public ApiResDTO<SearchCardListResDTO> getMySearchCards(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam(required = false) SearchCardStatus status,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size
     ) {
-        SearchCardListResponse response = searchCardQueryService.getMySearchCards(
+        SearchCardListResDTO response = searchCardQueryService.getMySearchCards(
                 Long.valueOf(jwt.getSubject()),
                 status,
                 page,
                 size
         );
-        return ApiResponse.success(response);
+        return ApiResDTO.success(response);
     }
 
     @GetMapping("/{searchCardId}")
-    public ApiResponse<SearchCardDetailResponse> getMySearchCard(
+    public ApiResDTO<SearchCardDetailResDTO> getMySearchCard(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable @Min(1) Long searchCardId
     ) {
-        SearchCardDetailResponse response = searchCardDetailQueryService.getMySearchCard(
+        SearchCardDetailResDTO response = searchCardDetailQueryService.getMySearchCard(
                 Long.valueOf(jwt.getSubject()),
                 searchCardId
         );
-        return ApiResponse.success(response);
+        return ApiResDTO.success(response);
     }
 
     @PatchMapping("/{searchCardId}")
-    public ApiResponse<SearchCardUpdateResponse> updateMySearchCard(
+    public ApiResDTO<SearchCardUpdateResDTO> updateMySearchCard(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable @Min(1) Long searchCardId,
-            @Valid @RequestBody SearchCardUpdateRequest request
+            @Valid @RequestBody SearchCardUpdateReqDTO request
     ) {
-        SearchCardUpdateResponse response = searchCardUpdateService.update(
+        SearchCardUpdateResDTO response = searchCardUpdateService.update(
                 Long.valueOf(jwt.getSubject()),
                 searchCardId,
                 request
         );
-        return ApiResponse.success(response);
+        return ApiResDTO.success(response);
     }
 
     @PostMapping("/{searchCardId}/close")
-    public ApiResponse<SearchCardCloseResponse> closeMySearchCard(
+    public ApiResDTO<SearchCardCloseResDTO> closeMySearchCard(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable @Min(1) Long searchCardId,
-            @Valid @RequestBody SearchCardCloseRequest request
+            @Valid @RequestBody SearchCardCloseReqDTO request
     ) {
-        SearchCardCloseResponse response = searchCardCloseService.close(
+        SearchCardCloseResDTO response = searchCardCloseService.close(
                 Long.valueOf(jwt.getSubject()),
                 searchCardId,
                 request
         );
-        return ApiResponse.success(response);
+        return ApiResDTO.success(response);
     }
 
     @DeleteMapping("/{searchCardId}")
-    public ApiResponse<Void> deleteMySearchCard(
+    public ApiResDTO<Void> deleteMySearchCard(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable @Min(1) Long searchCardId
     ) {
         searchCardDeleteService.delete(Long.valueOf(jwt.getSubject()), searchCardId);
-        return ApiResponse.success();
+        return ApiResDTO.success();
     }
 }

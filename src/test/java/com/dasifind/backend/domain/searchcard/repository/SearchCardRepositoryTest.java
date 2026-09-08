@@ -1,6 +1,6 @@
 package com.dasifind.backend.domain.searchcard.repository;
 
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
@@ -122,7 +122,7 @@ class SearchCardRepositoryTest {
     ) {
         SearchCardAnalysis analysis = analysisRepository.save(SearchCardAnalysis.create(
                 user.getId(),
-                new AiAnalysisClientResponse(
+                new AiAnalysisClientResDTO(
                         "WALLET",
                         "CARD_WALLET",
                         List.of("BLACK"),

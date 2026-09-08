@@ -1,8 +1,8 @@
 package com.dasifind.backend.domain.auth.service;
 
 import com.dasifind.backend.domain.auth.config.EmailVerificationProperties;
-import com.dasifind.backend.domain.auth.dto.response.EmailVerificationConfirmResponse;
-import com.dasifind.backend.domain.auth.dto.response.EmailVerificationSendResponse;
+import com.dasifind.backend.domain.auth.dto.response.EmailVerificationConfirmResDTO;
+import com.dasifind.backend.domain.auth.dto.response.EmailVerificationSendResDTO;
 import com.dasifind.backend.domain.auth.mail.VerificationEmailSender;
 import com.dasifind.backend.domain.auth.model.EmailVerificationState;
 import com.dasifind.backend.domain.auth.repository.EmailVerificationRepository;
@@ -44,7 +44,7 @@ public class EmailVerificationService {
         this.secureRandom = secureRandom;
     }
 
-    public EmailVerificationSendResponse send(String rawEmail) {
+    public EmailVerificationSendResDTO send(String rawEmail) {
         String email = normalizeEmail(rawEmail);
         if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
@@ -72,10 +72,10 @@ public class EmailVerificationService {
             throw exception;
         }
 
-        return new EmailVerificationSendResponse(verificationId, properties.codeTtl().toSeconds());
+        return new EmailVerificationSendResDTO(verificationId, properties.codeTtl().toSeconds());
     }
 
-    public EmailVerificationConfirmResponse confirm(String verificationId, String verificationCode) {
+    public EmailVerificationConfirmResDTO confirm(String verificationId, String verificationCode) {
         if (verificationRepository.isConfirmed(verificationId)) {
             throw new BusinessException(ErrorCode.DUPLICATE_REQUEST);
         }
@@ -106,7 +106,7 @@ public class EmailVerificationService {
         verificationRepository.deleteRequest(verificationId);
         String verificationToken = randomId("evt_");
         verificationRepository.saveToken(verificationToken, state.email(), properties.tokenTtl());
-        return new EmailVerificationConfirmResponse(verificationToken, state.email());
+        return new EmailVerificationConfirmResDTO(verificationToken, state.email());
     }
 
     public void consumeVerificationToken(String verificationToken, String rawEmail) {

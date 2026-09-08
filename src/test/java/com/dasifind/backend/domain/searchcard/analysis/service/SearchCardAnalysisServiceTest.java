@@ -1,11 +1,11 @@
 package com.dasifind.backend.domain.searchcard.analysis.service;
 
 import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClient;
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientRequest;
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
-import com.dasifind.backend.domain.searchcard.analysis.dto.request.LostLocationRequest;
-import com.dasifind.backend.domain.searchcard.analysis.dto.request.SearchCardAnalysisRequest;
-import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientReqDTO;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
+import com.dasifind.backend.domain.searchcard.analysis.dto.request.LostLocationReqDTO;
+import com.dasifind.backend.domain.searchcard.analysis.dto.request.SearchCardAnalysisReqDTO;
+import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
 import com.dasifind.backend.domain.searchcard.image.entity.SearchCardImage;
@@ -66,8 +66,8 @@ class SearchCardAnalysisServiceTest {
 
     @Test
     void 사진_없이_텍스트만_AI로_전달하고_결과를_저장한다() {
-        SearchCardAnalysisRequest request = request(List.of());
-        AiAnalysisClientResponse aiResult = aiResult();
+        SearchCardAnalysisReqDTO request = request(List.of());
+        AiAnalysisClientResDTO aiResult = aiResult();
         when(userRepository.existsById(7L)).thenReturn(true);
         when(aiAnalysisClient.analyze(any())).thenReturn(aiResult);
         when(analysisRepository.saveAndFlush(any())).thenAnswer(invocation -> {
@@ -76,10 +76,10 @@ class SearchCardAnalysisServiceTest {
             return analysis;
         });
 
-        SearchCardAnalysisResponse response = service.analyze(7L, request);
+        SearchCardAnalysisResDTO response = service.analyze(7L, request);
 
-        ArgumentCaptor<AiAnalysisClientRequest> clientRequestCaptor =
-                ArgumentCaptor.forClass(AiAnalysisClientRequest.class);
+        ArgumentCaptor<AiAnalysisClientReqDTO> clientRequestCaptor =
+                ArgumentCaptor.forClass(AiAnalysisClientReqDTO.class);
         verify(aiAnalysisClient).analyze(clientRequestCaptor.capture());
         assertThat(clientRequestCaptor.getValue().images()).isEmpty();
         assertThat(response.analysisId()).isEqualTo(801L);
@@ -107,11 +107,11 @@ class SearchCardAnalysisServiceTest {
 
         service.analyze(7L, request(List.of(501L)));
 
-        ArgumentCaptor<AiAnalysisClientRequest> requestCaptor =
-                ArgumentCaptor.forClass(AiAnalysisClientRequest.class);
+        ArgumentCaptor<AiAnalysisClientReqDTO> requestCaptor =
+                ArgumentCaptor.forClass(AiAnalysisClientReqDTO.class);
         verify(aiAnalysisClient).analyze(requestCaptor.capture());
         assertThat(requestCaptor.getValue().images()).containsExactly(
-                new AiAnalysisClientRequest.Image(
+                new AiAnalysisClientReqDTO.Image(
                         501L,
                         "https://presigned.example/wallet.png",
                         SearchCardImageType.ACTUAL
@@ -159,8 +159,8 @@ class SearchCardAnalysisServiceTest {
     @Test
     void 종료_시간이_시작_시간보다_빠르면_거절한다() {
         when(userRepository.existsById(7L)).thenReturn(true);
-        SearchCardAnalysisRequest original = request(List.of());
-        SearchCardAnalysisRequest invalid = new SearchCardAnalysisRequest(
+        SearchCardAnalysisReqDTO original = request(List.of());
+        SearchCardAnalysisReqDTO invalid = new SearchCardAnalysisReqDTO(
                 original.category(), original.itemName(), original.color(), original.brand(),
                 original.featureDescription(), original.imageIds(), original.lostDate(),
                 LocalTime.of(20, 0), LocalTime.of(18, 0), original.lostLocation()
@@ -174,7 +174,7 @@ class SearchCardAnalysisServiceTest {
     @Test
     void AI가_불완전한_결과를_반환하면_저장하지_않는다() {
         when(userRepository.existsById(7L)).thenReturn(true);
-        when(aiAnalysisClient.analyze(any())).thenReturn(new AiAnalysisClientResponse(
+        when(aiAnalysisClient.analyze(any())).thenReturn(new AiAnalysisClientResDTO(
                 "WALLET", "CARD_WALLET", null, null, List.of(), null, List.of(), "v1"
         ));
 
@@ -193,14 +193,14 @@ class SearchCardAnalysisServiceTest {
         verify(imageStorage, never()).createDownloadUrl(anyString());
     }
 
-    private void assertError(SearchCardAnalysisRequest request, ErrorCode expectedErrorCode) {
+    private void assertError(SearchCardAnalysisReqDTO request, ErrorCode expectedErrorCode) {
         assertThatThrownBy(() -> service.analyze(7L, request))
                 .isInstanceOfSatisfying(BusinessException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(expectedErrorCode));
     }
 
-    private SearchCardAnalysisRequest request(List<Long> imageIds) {
-        return new SearchCardAnalysisRequest(
+    private SearchCardAnalysisReqDTO request(List<Long> imageIds) {
+        return new SearchCardAnalysisReqDTO(
                 "WALLET",
                 "남색 카드지갑",
                 List.of("NAVY"),
@@ -210,7 +210,7 @@ class SearchCardAnalysisServiceTest {
                 LocalDate.of(2026, 8, 17),
                 LocalTime.of(18, 0),
                 LocalTime.of(20, 0),
-                new LostLocationRequest(
+                new LostLocationReqDTO(
                         "판교역",
                         "경기도 성남시 분당구 판교역로 166",
                         new BigDecimal("37.3947"),
@@ -220,8 +220,8 @@ class SearchCardAnalysisServiceTest {
         );
     }
 
-    private AiAnalysisClientResponse aiResult() {
-        return new AiAnalysisClientResponse(
+    private AiAnalysisClientResDTO aiResult() {
+        return new AiAnalysisClientResDTO(
                 "WALLET",
                 "CARD_WALLET",
                 List.of("NAVY", "BLACK"),

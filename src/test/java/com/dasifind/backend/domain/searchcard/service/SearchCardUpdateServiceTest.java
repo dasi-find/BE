@@ -1,11 +1,11 @@
 package com.dasifind.backend.domain.searchcard.service;
 
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardLostLocationRequest;
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardUpdateRequest;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResponse;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardLostLocationReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardUpdateReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResDTO;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
@@ -72,7 +72,7 @@ class SearchCardUpdateServiceTest {
         when(searchCardRepository.existsByAnalysisId(902L)).thenReturn(false);
         when(lostLocationRepository.findBySearchCardId(12L)).thenReturn(Optional.of(location));
 
-        SearchCardUpdateResponse response = service.update(7L, 12L, request());
+        SearchCardUpdateResDTO response = service.update(7L, 12L, request());
 
         assertThat(response.searchCardId()).isEqualTo(12L);
         assertThat(response.status()).isEqualTo(SearchCardStatus.ACTIVE);
@@ -138,7 +138,7 @@ class SearchCardUpdateServiceTest {
 
     @Test
     void 분실_시작시간이_종료시간보다_늦으면_수정할_수_없다() {
-        SearchCardUpdateRequest invalidRequest = new SearchCardUpdateRequest(
+        SearchCardUpdateReqDTO invalidRequest = new SearchCardUpdateReqDTO(
                 902L,
                 "WALLET",
                 "남색 카드지갑",
@@ -163,7 +163,7 @@ class SearchCardUpdateServiceTest {
 
     @Test
     void 중복_색상이_있으면_수정할_수_없다() {
-        SearchCardUpdateRequest invalidRequest = new SearchCardUpdateRequest(
+        SearchCardUpdateReqDTO invalidRequest = new SearchCardUpdateReqDTO(
                 902L,
                 "WALLET",
                 "남색 카드지갑",
@@ -190,8 +190,8 @@ class SearchCardUpdateServiceTest {
                         assertThat(exception.getErrorCode()).isEqualTo(errorCode));
     }
 
-    private SearchCardUpdateRequest request() {
-        return new SearchCardUpdateRequest(
+    private SearchCardUpdateReqDTO request() {
+        return new SearchCardUpdateReqDTO(
                 902L,
                 " WALLET ",
                 " 남색 카드지갑 ",
@@ -206,8 +206,8 @@ class SearchCardUpdateServiceTest {
         );
     }
 
-    private SearchCardLostLocationRequest locationRequest() {
-        return new SearchCardLostLocationRequest(
+    private SearchCardLostLocationReqDTO locationRequest() {
+        return new SearchCardLostLocationReqDTO(
                 " 판교역 스타벅스 ",
                 " 경기도 성남시 분당구 판교역로 166 ",
                 new BigDecimal("37.3947000"),
@@ -256,7 +256,7 @@ class SearchCardUpdateServiceTest {
     private SearchCardAnalysis analysis(Long id, Long userId) {
         SearchCardAnalysis analysis = SearchCardAnalysis.create(
                 userId,
-                new AiAnalysisClientResponse(
+                new AiAnalysisClientResDTO(
                         "WALLET",
                         "CARD_WALLET",
                         List.of("NAVY"),

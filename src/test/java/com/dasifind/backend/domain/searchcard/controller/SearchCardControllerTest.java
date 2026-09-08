@@ -1,14 +1,14 @@
 package com.dasifind.backend.domain.searchcard.controller;
 
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCloseResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailAnalysisResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailImageResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailLostLocationResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListItemResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResponse;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCloseResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailAnalysisResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailImageResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailLostLocationResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListItemResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResDTO;
 import com.dasifind.backend.domain.searchcard.image.model.SearchCardImageType;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
 import com.dasifind.backend.domain.searchcard.service.SearchCardCloseService;
@@ -117,7 +117,7 @@ class SearchCardControllerTest {
     @Test
     void 추천_후보로_물건을_찾아_수색을_종료한다() throws Exception {
         when(searchCardCloseService.close(eq(7L), eq(12L), any()))
-                .thenReturn(new SearchCardCloseResponse(
+                .thenReturn(new SearchCardCloseResDTO(
                         12L,
                         SearchCardStatus.FOUND,
                         LocalDateTime.of(2026, 8, 25, 15, 0)
@@ -193,7 +193,7 @@ class SearchCardControllerTest {
     @Test
     void 재분석_결과로_활성_수색카드를_수정한다() throws Exception {
         when(searchCardUpdateService.update(eq(7L), eq(12L), any()))
-                .thenReturn(new SearchCardUpdateResponse(
+                .thenReturn(new SearchCardUpdateResDTO(
                         12L,
                         SearchCardStatus.ACTIVE,
                         false
@@ -247,7 +247,7 @@ class SearchCardControllerTest {
 
     @Test
     void 본인의_수색카드_상세를_조회한다() throws Exception {
-        SearchCardDetailResponse response = new SearchCardDetailResponse(
+        SearchCardDetailResDTO response = new SearchCardDetailResDTO(
                 12L,
                 "WALLET",
                 "남색 카드지갑",
@@ -255,7 +255,7 @@ class SearchCardControllerTest {
                 null,
                 "LEATHER",
                 "앞면 중앙에 은색 로고가 있어요.",
-                List.of(new SearchCardDetailImageResponse(
+                List.of(new SearchCardDetailImageResDTO(
                         501L,
                         "https://download.example.com/501",
                         SearchCardImageType.REFERENCE
@@ -263,14 +263,14 @@ class SearchCardControllerTest {
                 LocalDate.of(2026, 8, 17),
                 LocalTime.of(18, 0),
                 LocalTime.of(20, 0),
-                new SearchCardDetailLostLocationResponse(
+                new SearchCardDetailLostLocationResDTO(
                         "판교역 스타벅스",
                         "경기도 성남시 분당구 판교역로 166",
                         new BigDecimal("37.3947000"),
                         new BigDecimal("127.1112000"),
                         "카페에서 나올 때까지는 있었어요."
                 ),
-                new SearchCardDetailAnalysisResponse(
+                new SearchCardDetailAnalysisResDTO(
                         List.of("앞면 은색 로고"),
                         "preprocess-v1"
                 ),
@@ -340,8 +340,8 @@ class SearchCardControllerTest {
     @Test
     void 내_수색카드를_기본_페이징으로_최근순_조회한다() throws Exception {
         when(searchCardQueryService.getMySearchCards(7L, null, 0, 20))
-                .thenReturn(new SearchCardListResponse(
-                        List.of(new SearchCardListItemResponse(
+                .thenReturn(new SearchCardListResDTO(
+                        List.of(new SearchCardListItemResDTO(
                                 12L,
                                 "남색 카드지갑",
                                 SearchCardStatus.ACTIVE,
@@ -378,7 +378,7 @@ class SearchCardControllerTest {
     @Test
     void 상태와_페이지를_지정해_내_수색카드를_조회한다() throws Exception {
         when(searchCardQueryService.getMySearchCards(7L, SearchCardStatus.CLOSED, 1, 10))
-                .thenReturn(new SearchCardListResponse(List.of(), 1, 10, 11, false));
+                .thenReturn(new SearchCardListResDTO(List.of(), 1, 10, 11, false));
 
         mockMvc.perform(get("/api/v1/search-cards")
                         .param("status", "CLOSED")
@@ -431,7 +431,7 @@ class SearchCardControllerTest {
     @Test
     void 수색카드를_생성하고_30일_수색을_시작한다() throws Exception {
         when(searchCardCreateService.create(eq(7L), any())).thenReturn(
-                new SearchCardCreateResponse(
+                new SearchCardCreateResDTO(
                         12L,
                         SearchCardStatus.ACTIVE,
                         LocalDateTime.of(2026, 9, 16, 23, 59, 59),

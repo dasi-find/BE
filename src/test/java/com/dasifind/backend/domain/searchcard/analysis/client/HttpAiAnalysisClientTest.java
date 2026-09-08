@@ -47,7 +47,7 @@ class HttpAiAnalysisClientTest {
                         }
                         """, MediaType.APPLICATION_JSON));
 
-        AiAnalysisClientResponse response = client.analyze(request());
+        AiAnalysisClientResDTO response = client.analyze(request());
 
         assertThat(response.itemName()).isEqualTo("CARD_WALLET");
         assertThat(response.colors()).containsExactly("NAVY");
@@ -110,8 +110,8 @@ class HttpAiAnalysisClientTest {
         );
     }
 
-    private AiAnalysisClientRequest request() {
-        return new AiAnalysisClientRequest(
+    private AiAnalysisClientReqDTO request() {
+        return new AiAnalysisClientReqDTO(
                 "WALLET",
                 "남색 카드지갑",
                 List.of("NAVY"),
@@ -121,7 +121,7 @@ class HttpAiAnalysisClientTest {
                 LocalDate.of(2026, 8, 17),
                 null,
                 null,
-                new AiAnalysisClientRequest.Location(
+                new AiAnalysisClientReqDTO.Location(
                         "판교역",
                         "경기도 성남시 분당구 판교역로 166",
                         new BigDecimal("37.3947"),

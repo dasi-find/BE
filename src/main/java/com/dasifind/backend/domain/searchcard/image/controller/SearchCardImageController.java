@@ -1,9 +1,9 @@
 package com.dasifind.backend.domain.searchcard.image.controller;
 
-import com.dasifind.backend.domain.searchcard.image.dto.response.SearchCardImageUploadResponse;
+import com.dasifind.backend.domain.searchcard.image.dto.response.SearchCardImageUploadResDTO;
 import com.dasifind.backend.domain.searchcard.image.model.SearchCardImageType;
 import com.dasifind.backend.domain.searchcard.image.service.SearchCardImageService;
-import com.dasifind.backend.global.api.ApiResponse;
+import com.dasifind.backend.global.api.ApiResDTO;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -27,25 +27,25 @@ public class SearchCardImageController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<SearchCardImageUploadResponse> upload(
+    public ApiResDTO<SearchCardImageUploadResDTO> upload(
             @AuthenticationPrincipal Jwt jwt,
             @RequestPart("file") MultipartFile file,
             @RequestParam("imageType") SearchCardImageType imageType
     ) {
-        SearchCardImageUploadResponse response = searchCardImageService.upload(
+        SearchCardImageUploadResDTO response = searchCardImageService.upload(
                 Long.valueOf(jwt.getSubject()),
                 file,
                 imageType
         );
-        return ApiResponse.success(response);
+        return ApiResDTO.success(response);
     }
 
     @DeleteMapping("/{imageId}")
-    public ApiResponse<Void> delete(
+    public ApiResDTO<Void> delete(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable Long imageId
     ) {
         searchCardImageService.delete(Long.valueOf(jwt.getSubject()), imageId);
-        return ApiResponse.success();
+        return ApiResDTO.success();
     }
 }

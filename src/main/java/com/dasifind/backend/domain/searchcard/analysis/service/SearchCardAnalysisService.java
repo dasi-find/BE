@@ -1,11 +1,11 @@
 package com.dasifind.backend.domain.searchcard.analysis.service;
 
 import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClient;
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientRequest;
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
-import com.dasifind.backend.domain.searchcard.analysis.dto.request.LostLocationRequest;
-import com.dasifind.backend.domain.searchcard.analysis.dto.request.SearchCardAnalysisRequest;
-import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientReqDTO;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
+import com.dasifind.backend.domain.searchcard.analysis.dto.request.LostLocationReqDTO;
+import com.dasifind.backend.domain.searchcard.analysis.dto.request.SearchCardAnalysisReqDTO;
+import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
 import com.dasifind.backend.domain.searchcard.image.entity.SearchCardImage;
@@ -42,18 +42,18 @@ public class SearchCardAnalysisService {
         this.aiAnalysisClient = aiAnalysisClient;
     }
 
-    public SearchCardAnalysisResponse analyze(Long userId, SearchCardAnalysisRequest request) {
+    public SearchCardAnalysisResDTO analyze(Long userId, SearchCardAnalysisReqDTO request) {
         validateUser(userId);
         validateRequest(request);
 
-        List<AiAnalysisClientRequest.Image> images = request.imageIds().stream()
+        List<AiAnalysisClientReqDTO.Image> images = request.imageIds().stream()
                 .map(imageId -> resolveImage(userId, imageId))
                 .toList();
-        AiAnalysisClientResponse result = aiAnalysisClient.analyze(toClientRequest(request, images));
+        AiAnalysisClientResDTO result = aiAnalysisClient.analyze(toClientRequest(request, images));
         validateResult(result);
 
         SearchCardAnalysis analysis = SearchCardAnalysis.create(userId, result);
-        return SearchCardAnalysisResponse.from(searchCardAnalysisRepository.saveAndFlush(analysis));
+        return SearchCardAnalysisResDTO.from(searchCardAnalysisRepository.saveAndFlush(analysis));
     }
 
     private void validateUser(Long userId) {
@@ -62,7 +62,7 @@ public class SearchCardAnalysisService {
         }
     }
 
-    private void validateRequest(SearchCardAnalysisRequest request) {
+    private void validateRequest(SearchCardAnalysisReqDTO request) {
         if (request.lostStartTime() != null
                 && request.lostEndTime() != null
                 && request.lostStartTime().isAfter(request.lostEndTime())) {
@@ -73,25 +73,25 @@ public class SearchCardAnalysisService {
         }
     }
 
-    private AiAnalysisClientRequest.Image resolveImage(Long userId, Long imageId) {
+    private AiAnalysisClientReqDTO.Image resolveImage(Long userId, Long imageId) {
         SearchCardImage image = searchCardImageRepository.findById(imageId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
         if (!image.getUserId().equals(userId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
-        return new AiAnalysisClientRequest.Image(
+        return new AiAnalysisClientReqDTO.Image(
                 image.getId(),
                 imageStorage.createDownloadUrl(image.getStorageKey()),
                 image.getImageType()
         );
     }
 
-    private AiAnalysisClientRequest toClientRequest(
-            SearchCardAnalysisRequest request,
-            List<AiAnalysisClientRequest.Image> images
+    private AiAnalysisClientReqDTO toClientRequest(
+            SearchCardAnalysisReqDTO request,
+            List<AiAnalysisClientReqDTO.Image> images
     ) {
-        LostLocationRequest location = request.lostLocation();
-        return new AiAnalysisClientRequest(
+        LostLocationReqDTO location = request.lostLocation();
+        return new AiAnalysisClientReqDTO(
                 request.category(),
                 request.itemName(),
                 List.copyOf(request.color()),
@@ -101,7 +101,7 @@ public class SearchCardAnalysisService {
                 request.lostDate(),
                 request.lostStartTime(),
                 request.lostEndTime(),
-                new AiAnalysisClientRequest.Location(
+                new AiAnalysisClientReqDTO.Location(
                         location.placeName(),
                         location.address(),
                         location.latitude(),
@@ -111,7 +111,7 @@ public class SearchCardAnalysisService {
         );
     }
 
-    private void validateResult(AiAnalysisClientResponse result) {
+    private void validateResult(AiAnalysisClientResDTO result) {
         if (result == null
                 || isInvalidRequired(result.category(), 50)
                 || isInvalidRequired(result.itemName(), 100)

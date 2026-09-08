@@ -1,7 +1,7 @@
 package com.dasifind.backend.domain.searchcard.image.service;
 
 import com.dasifind.backend.domain.searchcard.image.config.SearchCardImageProperties;
-import com.dasifind.backend.domain.searchcard.image.dto.response.SearchCardImageUploadResponse;
+import com.dasifind.backend.domain.searchcard.image.dto.response.SearchCardImageUploadResDTO;
 import com.dasifind.backend.domain.searchcard.image.entity.SearchCardImage;
 import com.dasifind.backend.domain.searchcard.image.model.DetectedImageFormat;
 import com.dasifind.backend.domain.searchcard.image.model.SearchCardImageType;
@@ -43,7 +43,7 @@ public class SearchCardImageService {
         this.properties = properties;
     }
 
-    public SearchCardImageUploadResponse upload(
+    public SearchCardImageUploadResDTO upload(
             Long userId,
             MultipartFile file,
             SearchCardImageType imageType
@@ -68,7 +68,7 @@ public class SearchCardImageService {
                 content.length
         );
         SearchCardImage savedImage = saveWithCompensation(image, storageKey);
-        return SearchCardImageUploadResponse.of(savedImage, imageUrl);
+        return SearchCardImageUploadResDTO.of(savedImage, imageUrl);
     }
 
     @Transactional

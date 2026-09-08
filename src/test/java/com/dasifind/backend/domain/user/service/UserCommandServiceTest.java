@@ -1,7 +1,7 @@
 package com.dasifind.backend.domain.user.service;
 
-import com.dasifind.backend.domain.user.dto.request.UpdateMyProfileRequest;
-import com.dasifind.backend.domain.user.dto.response.UpdateMyProfileResponse;
+import com.dasifind.backend.domain.user.dto.request.UpdateMyProfileReqDTO;
+import com.dasifind.backend.domain.user.dto.response.UpdateMyProfileResDTO;
 import com.dasifind.backend.domain.user.entity.User;
 import com.dasifind.backend.domain.user.repository.UserRepository;
 import com.dasifind.backend.global.error.BusinessException;
@@ -35,9 +35,9 @@ class UserCommandServiceTest {
         User user = user();
         when(userRepository.findById(7L)).thenReturn(Optional.of(user));
 
-        UpdateMyProfileResponse response = userCommandService.updateMyProfile(
+        UpdateMyProfileResDTO response = userCommandService.updateMyProfile(
                 7L,
-                new UpdateMyProfileRequest("  새 이름  ", false)
+                new UpdateMyProfileReqDTO("  새 이름  ", false)
         );
 
         assertThat(response.name()).isEqualTo("새 이름");
@@ -51,9 +51,9 @@ class UserCommandServiceTest {
         User user = user();
         when(userRepository.findById(7L)).thenReturn(Optional.of(user));
 
-        UpdateMyProfileResponse response = userCommandService.updateMyProfile(
+        UpdateMyProfileResDTO response = userCommandService.updateMyProfile(
                 7L,
-                new UpdateMyProfileRequest("새 이름", null)
+                new UpdateMyProfileReqDTO("새 이름", null)
         );
 
         assertThat(response.name()).isEqualTo("새 이름");
@@ -65,9 +65,9 @@ class UserCommandServiceTest {
         User user = user();
         when(userRepository.findById(7L)).thenReturn(Optional.of(user));
 
-        UpdateMyProfileResponse response = userCommandService.updateMyProfile(
+        UpdateMyProfileResDTO response = userCommandService.updateMyProfile(
                 7L,
-                new UpdateMyProfileRequest(null, false)
+                new UpdateMyProfileReqDTO(null, false)
         );
 
         assertThat(response.name()).isEqualTo("민준");
@@ -76,19 +76,19 @@ class UserCommandServiceTest {
 
     @Test
     void 수정할_필드가_없으면_잘못된_요청으로_처리한다() {
-        assertInvalidRequest(new UpdateMyProfileRequest(null, null));
+        assertInvalidRequest(new UpdateMyProfileReqDTO(null, null));
         verify(userRepository, never()).findById(7L);
     }
 
     @Test
     void 표시명이_공백이면_잘못된_요청으로_처리한다() {
-        assertInvalidRequest(new UpdateMyProfileRequest("   ", null));
+        assertInvalidRequest(new UpdateMyProfileReqDTO("   ", null));
         verify(userRepository, never()).findById(7L);
     }
 
     @Test
     void 공백을_제거한_표시명이_50자를_초과하면_잘못된_요청으로_처리한다() {
-        assertInvalidRequest(new UpdateMyProfileRequest("가".repeat(51), null));
+        assertInvalidRequest(new UpdateMyProfileReqDTO("가".repeat(51), null));
         verify(userRepository, never()).findById(7L);
     }
 
@@ -98,12 +98,12 @@ class UserCommandServiceTest {
 
         assertThatThrownBy(() -> userCommandService.updateMyProfile(
                 7L,
-                new UpdateMyProfileRequest("새 이름", null)
+                new UpdateMyProfileReqDTO("새 이름", null)
         )).isInstanceOfSatisfying(BusinessException.class, exception ->
                 assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_TOKEN));
     }
 
-    private void assertInvalidRequest(UpdateMyProfileRequest request) {
+    private void assertInvalidRequest(UpdateMyProfileReqDTO request) {
         assertThatThrownBy(() -> userCommandService.updateMyProfile(7L, request))
                 .isInstanceOfSatisfying(BusinessException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_REQUEST));

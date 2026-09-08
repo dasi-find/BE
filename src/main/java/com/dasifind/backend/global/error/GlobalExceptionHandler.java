@@ -1,6 +1,6 @@
 package com.dasifind.backend.global.error;
 
-import com.dasifind.backend.global.api.ApiResponse;
+import com.dasifind.backend.global.api.ApiResDTO;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +27,12 @@ public class GlobalExceptionHandler {
     private static final Set<String> REQUIRED_CONSTRAINTS = Set.of("NotNull", "NotBlank", "NotEmpty");
 
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException exception) {
+    public ResponseEntity<ApiResDTO<Void>> handleBusinessException(BusinessException exception) {
         return errorResponse(exception.getErrorCode());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValid(
+    public ResponseEntity<ApiResDTO<Void>> handleMethodArgumentNotValid(
             MethodArgumentNotValidException exception
     ) {
         ErrorCode errorCode = exception.getBindingResult().getFieldErrors().stream()
@@ -48,7 +48,7 @@ public class GlobalExceptionHandler {
             MissingServletRequestParameterException.class,
             MissingServletRequestPartException.class
     })
-    public ResponseEntity<ApiResponse<Void>> handleRequiredValueMissing(Exception exception) {
+    public ResponseEntity<ApiResDTO<Void>> handleRequiredValueMissing(Exception exception) {
         return errorResponse(ErrorCode.REQUIRED_FIELD_MISSING);
     }
 
@@ -58,31 +58,31 @@ public class GlobalExceptionHandler {
             HandlerMethodValidationException.class,
             ConstraintViolationException.class
     })
-    public ResponseEntity<ApiResponse<Void>> handleInvalidRequest(Exception exception) {
+    public ResponseEntity<ApiResDTO<Void>> handleInvalidRequest(Exception exception) {
         return errorResponse(ErrorCode.INVALID_REQUEST);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ApiResponse<Void>> handleMaxUploadSizeExceeded(
+    public ResponseEntity<ApiResDTO<Void>> handleMaxUploadSizeExceeded(
             MaxUploadSizeExceededException exception
     ) {
         return errorResponse(ErrorCode.IMAGE_TOO_LARGE);
     }
 
     @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
-    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(Exception exception) {
+    public ResponseEntity<ApiResDTO<Void>> handleResourceNotFound(Exception exception) {
         return errorResponse(ErrorCode.RESOURCE_NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleUnexpectedException(Exception exception) {
+    public ResponseEntity<ApiResDTO<Void>> handleUnexpectedException(Exception exception) {
         log.error("Unhandled server exception", exception);
         return errorResponse(ErrorCode.INTERNAL_SERVER_ERROR);
     }
 
-    private ResponseEntity<ApiResponse<Void>> errorResponse(ErrorCode errorCode) {
+    private ResponseEntity<ApiResDTO<Void>> errorResponse(ErrorCode errorCode) {
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
-                .body(ApiResponse.failure(errorCode));
+                .body(ApiResDTO.failure(errorCode));
     }
 }
