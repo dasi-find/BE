@@ -1,8 +1,8 @@
 package com.dasifind.backend.domain.user.controller;
 
-import com.dasifind.backend.domain.user.dto.request.UpdateMyProfileRequest;
-import com.dasifind.backend.domain.user.dto.response.MyProfileResponse;
-import com.dasifind.backend.domain.user.dto.response.UpdateMyProfileResponse;
+import com.dasifind.backend.domain.user.dto.request.UpdateMyProfileReqDTO;
+import com.dasifind.backend.domain.user.dto.response.MyProfileResDTO;
+import com.dasifind.backend.domain.user.dto.response.UpdateMyProfileResDTO;
 import com.dasifind.backend.domain.user.service.UserCommandService;
 import com.dasifind.backend.domain.user.service.UserQueryService;
 import com.dasifind.backend.global.error.BusinessException;
@@ -44,7 +44,7 @@ class UserControllerTest {
 
     @Test
     void 로그인한_사용자의_내_정보를_조회한다() throws Exception {
-        when(userQueryService.getMyProfile(7L)).thenReturn(new MyProfileResponse(
+        when(userQueryService.getMyProfile(7L)).thenReturn(new MyProfileResDTO(
                 7L,
                 "hello@dasifind.kr",
                 "민준",
@@ -83,7 +83,7 @@ class UserControllerTest {
 
     @Test
     void 내_정보를_부분_수정한다() throws Exception {
-        when(userCommandService.updateMyProfile(any(), any())).thenReturn(new UpdateMyProfileResponse(
+        when(userCommandService.updateMyProfile(any(), any())).thenReturn(new UpdateMyProfileResDTO(
                 7L,
                 "hello@dasifind.kr",
                 "민준",
@@ -107,7 +107,7 @@ class UserControllerTest {
 
         verify(userCommandService).updateMyProfile(
                 7L,
-                new UpdateMyProfileRequest(null, false)
+                new UpdateMyProfileReqDTO(null, false)
         );
     }
 
@@ -116,7 +116,7 @@ class UserControllerTest {
         String tooLongName = "가".repeat(51);
         doThrow(new BusinessException(ErrorCode.INVALID_REQUEST))
                 .when(userCommandService)
-                .updateMyProfile(7L, new UpdateMyProfileRequest(tooLongName, null));
+                .updateMyProfile(7L, new UpdateMyProfileReqDTO(tooLongName, null));
 
         mockMvc.perform(patch("/api/v1/users/me")
                         .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access")))
@@ -129,7 +129,7 @@ class UserControllerTest {
     @Test
     void 수정할_필드가_없으면_잘못된_요청으로_응답한다() throws Exception {
         doThrow(new BusinessException(ErrorCode.INVALID_REQUEST))
-                .when(userCommandService).updateMyProfile(7L, new UpdateMyProfileRequest(null, null));
+                .when(userCommandService).updateMyProfile(7L, new UpdateMyProfileReqDTO(null, null));
 
         mockMvc.perform(patch("/api/v1/users/me")
                         .with(jwt().jwt(jwt -> jwt.subject("7").claim("tokenType", "access")))

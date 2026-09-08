@@ -1,7 +1,7 @@
 package com.dasifind.backend.domain.searchcard.analysis.service;
 
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
-import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
+import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
 import com.dasifind.backend.domain.user.entity.User;
@@ -38,7 +38,7 @@ class SearchCardAnalysisQueryIntegrationTest {
         ));
         SearchCardAnalysis analysis = analysisRepository.saveAndFlush(SearchCardAnalysis.create(
                 user.getId(),
-                new AiAnalysisClientResponse(
+                new AiAnalysisClientResDTO(
                         "WALLET",
                         "CARD_WALLET",
                         List.of("NAVY", "BLACK"),
@@ -50,7 +50,7 @@ class SearchCardAnalysisQueryIntegrationTest {
                 )
         ));
 
-        SearchCardAnalysisResponse response = queryService.get(user.getId(), analysis.getId());
+        SearchCardAnalysisResDTO response = queryService.get(user.getId(), analysis.getId());
 
         assertThat(response.colors()).containsExactly("NAVY", "BLACK");
         assertThat(response.materials()).containsExactly("LEATHER");

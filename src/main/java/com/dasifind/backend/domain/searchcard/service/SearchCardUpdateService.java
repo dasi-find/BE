@@ -2,9 +2,9 @@ package com.dasifind.backend.domain.searchcard.service;
 
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardLostLocationRequest;
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardUpdateRequest;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResponse;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardLostLocationReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardUpdateReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResDTO;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
@@ -41,10 +41,10 @@ public class SearchCardUpdateService {
     }
 
     @Transactional
-    public SearchCardUpdateResponse update(
+    public SearchCardUpdateResDTO update(
             Long userId,
             Long searchCardId,
-            SearchCardUpdateRequest request
+            SearchCardUpdateReqDTO request
     ) {
         validateUser(userId);
         validateRequest(request);
@@ -64,7 +64,7 @@ public class SearchCardUpdateService {
         searchCardRepository.flush();
         searchCardAnalysisRepository.deleteById(previousAnalysisId);
 
-        return SearchCardUpdateResponse.from(searchCard);
+        return SearchCardUpdateResDTO.from(searchCard);
     }
 
     private void validateUser(Long userId) {
@@ -96,7 +96,7 @@ public class SearchCardUpdateService {
         }
     }
 
-    private void validateRequest(SearchCardUpdateRequest request) {
+    private void validateRequest(SearchCardUpdateReqDTO request) {
         if (request.lostStartTime() != null
                 && request.lostEndTime() != null
                 && request.lostStartTime().isAfter(request.lostEndTime())) {
@@ -112,7 +112,7 @@ public class SearchCardUpdateService {
 
     private void updateSearchCard(
             SearchCard searchCard,
-            SearchCardUpdateRequest request,
+            SearchCardUpdateReqDTO request,
             LocalDateTime now
     ) {
         searchCard.update(
@@ -132,7 +132,7 @@ public class SearchCardUpdateService {
 
     private void updateLostLocation(
             LostLocation lostLocation,
-            SearchCardLostLocationRequest request,
+            SearchCardLostLocationReqDTO request,
             LocalDateTime now
     ) {
         lostLocation.update(

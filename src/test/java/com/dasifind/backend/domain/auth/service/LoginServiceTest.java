@@ -1,6 +1,6 @@
 package com.dasifind.backend.domain.auth.service;
 
-import com.dasifind.backend.domain.auth.dto.request.LoginRequest;
+import com.dasifind.backend.domain.auth.dto.request.LoginReqDTO;
 import com.dasifind.backend.domain.auth.model.IssuedTokens;
 import com.dasifind.backend.domain.auth.model.LoginResult;
 import com.dasifind.backend.domain.user.entity.User;
@@ -63,7 +63,7 @@ class LoginServiceTest {
         when(authTokenService.issue(7L))
                 .thenReturn(new IssuedTokens("access-token", 1800, "refresh-token"));
 
-        LoginResult result = loginService.login(new LoginRequest(" USER@example.com ", "password123"));
+        LoginResult result = loginService.login(new LoginReqDTO(" USER@example.com ", "password123"));
 
         InOrder inOrder = inOrder(loginAttemptService, authTokenService);
         inOrder.verify(loginAttemptService).ensureAllowed("user@example.com");
@@ -82,7 +82,7 @@ class LoginServiceTest {
         RuntimeException tokenIssueFailure = new RuntimeException("token issue failed");
         when(authTokenService.issue(7L)).thenThrow(tokenIssueFailure);
 
-        assertThatThrownBy(() -> loginService.login(new LoginRequest("user@example.com", "password123")))
+        assertThatThrownBy(() -> loginService.login(new LoginReqDTO("user@example.com", "password123")))
                 .isSameAs(tokenIssueFailure);
 
         verify(loginAttemptService, never()).clear("user@example.com");
@@ -94,7 +94,7 @@ class LoginServiceTest {
         when(userRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong-password", "encoded-password")).thenReturn(false);
 
-        assertThatThrownBy(() -> loginService.login(new LoginRequest("user@example.com", "wrong-password")))
+        assertThatThrownBy(() -> loginService.login(new LoginReqDTO("user@example.com", "wrong-password")))
                 .isInstanceOfSatisfying(BusinessException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_CREDENTIALS));
 
@@ -107,7 +107,7 @@ class LoginServiceTest {
         when(userRepository.findByEmailIgnoreCase("missing@example.com")).thenReturn(Optional.empty());
         when(passwordEncoder.matches("password123", "dummy-password-hash")).thenReturn(false);
 
-        assertThatThrownBy(() -> loginService.login(new LoginRequest("missing@example.com", "password123")))
+        assertThatThrownBy(() -> loginService.login(new LoginReqDTO("missing@example.com", "password123")))
                 .isInstanceOfSatisfying(BusinessException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_CREDENTIALS));
 
@@ -121,7 +121,7 @@ class LoginServiceTest {
         org.mockito.Mockito.doThrow(rateLimited)
                 .when(loginAttemptService).ensureAllowed("user@example.com");
 
-        assertThatThrownBy(() -> loginService.login(new LoginRequest("user@example.com", "password123")))
+        assertThatThrownBy(() -> loginService.login(new LoginReqDTO("user@example.com", "password123")))
                 .isSameAs(rateLimited);
 
         verify(userRepository, never()).findByEmailIgnoreCase(anyString());

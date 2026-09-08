@@ -1,11 +1,11 @@
 package com.dasifind.backend.domain.searchcard.service;
 
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCreateRequest;
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardLostLocationRequest;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResponse;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCreateReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardLostLocationReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResDTO;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.image.entity.SearchCardImage;
@@ -62,7 +62,7 @@ class SearchCardCreateServiceIntegrationTest {
         SearchCardAnalysis analysis = saveAnalysis(user.getId());
         SearchCardImage image = saveImage(user.getId(), "create.png");
 
-        SearchCardCreateResponse response = searchCardCreateService.create(
+        SearchCardCreateResDTO response = searchCardCreateService.create(
                 user.getId(),
                 request(analysis.getId(), List.of(image.getId()))
         );
@@ -88,7 +88,7 @@ class SearchCardCreateServiceIntegrationTest {
     void 같은_분석_결과로_수색카드를_중복_생성할_수_없다() {
         User user = saveUser("duplicate-card@example.com");
         SearchCardAnalysis analysis = saveAnalysis(user.getId());
-        SearchCardCreateRequest request = request(analysis.getId(), List.of());
+        SearchCardCreateReqDTO request = request(analysis.getId(), List.of());
         searchCardCreateService.create(user.getId(), request);
 
         assertThatThrownBy(() -> searchCardCreateService.create(user.getId(), request))
@@ -131,8 +131,8 @@ class SearchCardCreateServiceIntegrationTest {
     void 종료_시간이_시작_시간보다_빠르면_생성할_수_없다() {
         User user = saveUser("invalid-time@example.com");
         SearchCardAnalysis analysis = saveAnalysis(user.getId());
-        SearchCardCreateRequest original = request(analysis.getId(), List.of());
-        SearchCardCreateRequest invalid = copyWith(
+        SearchCardCreateReqDTO original = request(analysis.getId(), List.of());
+        SearchCardCreateReqDTO invalid = copyWith(
                 original,
                 original.imageIds(),
                 LocalTime.of(21, 0),
@@ -149,8 +149,8 @@ class SearchCardCreateServiceIntegrationTest {
         User user = saveUser("duplicate-image-id@example.com");
         SearchCardAnalysis analysis = saveAnalysis(user.getId());
         SearchCardImage image = saveImage(user.getId(), "duplicate-id.png");
-        SearchCardCreateRequest original = request(analysis.getId(), List.of());
-        SearchCardCreateRequest invalid = copyWith(
+        SearchCardCreateReqDTO original = request(analysis.getId(), List.of());
+        SearchCardCreateReqDTO invalid = copyWith(
                 original,
                 List.of(image.getId(), image.getId()),
                 original.lostStartTime(),
@@ -195,7 +195,7 @@ class SearchCardCreateServiceIntegrationTest {
     private SearchCardAnalysis saveAnalysis(Long userId) {
         return analysisRepository.saveAndFlush(SearchCardAnalysis.create(
                 userId,
-                new AiAnalysisClientResponse(
+                new AiAnalysisClientResDTO(
                         "WALLET",
                         "CARD_WALLET",
                         List.of("NAVY", "BLACK"),
@@ -218,8 +218,8 @@ class SearchCardCreateServiceIntegrationTest {
         ));
     }
 
-    private SearchCardCreateRequest request(Long analysisId, List<Long> imageIds) {
-        return new SearchCardCreateRequest(
+    private SearchCardCreateReqDTO request(Long analysisId, List<Long> imageIds) {
+        return new SearchCardCreateReqDTO(
                 analysisId,
                 " WALLET ",
                 " 남색 카드지갑 ",
@@ -231,7 +231,7 @@ class SearchCardCreateServiceIntegrationTest {
                 LocalDate.of(2026, 8, 17),
                 LocalTime.of(18, 0),
                 LocalTime.of(20, 0),
-                new SearchCardLostLocationRequest(
+                new SearchCardLostLocationReqDTO(
                         " 판교역 ",
                         " 경기도 성남시 분당구 판교역로 166 ",
                         new BigDecimal("37.3947"),
@@ -241,13 +241,13 @@ class SearchCardCreateServiceIntegrationTest {
         );
     }
 
-    private SearchCardCreateRequest copyWith(
-            SearchCardCreateRequest original,
+    private SearchCardCreateReqDTO copyWith(
+            SearchCardCreateReqDTO original,
             List<Long> imageIds,
             LocalTime lostStartTime,
             LocalTime lostEndTime
     ) {
-        return new SearchCardCreateRequest(
+        return new SearchCardCreateReqDTO(
                 original.analysisId(),
                 original.category(),
                 original.itemName(),

@@ -1,10 +1,10 @@
 package com.dasifind.backend.domain.searchcard.analysis.controller;
 
-import com.dasifind.backend.domain.searchcard.analysis.dto.request.SearchCardAnalysisRequest;
-import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResponse;
+import com.dasifind.backend.domain.searchcard.analysis.dto.request.SearchCardAnalysisReqDTO;
+import com.dasifind.backend.domain.searchcard.analysis.dto.response.SearchCardAnalysisResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.service.SearchCardAnalysisQueryService;
 import com.dasifind.backend.domain.searchcard.analysis.service.SearchCardAnalysisService;
-import com.dasifind.backend.global.api.ApiResponse;
+import com.dasifind.backend.global.api.ApiResDTO;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -31,26 +31,26 @@ public class SearchCardAnalysisController {
     }
 
     @PostMapping
-    public ApiResponse<SearchCardAnalysisResponse> analyze(
+    public ApiResDTO<SearchCardAnalysisResDTO> analyze(
             @AuthenticationPrincipal Jwt jwt,
-            @Valid @RequestBody SearchCardAnalysisRequest request
+            @Valid @RequestBody SearchCardAnalysisReqDTO request
     ) {
-        SearchCardAnalysisResponse response = searchCardAnalysisService.analyze(
+        SearchCardAnalysisResDTO response = searchCardAnalysisService.analyze(
                 Long.valueOf(jwt.getSubject()),
                 request
         );
-        return ApiResponse.success(response);
+        return ApiResDTO.success(response);
     }
 
     @GetMapping("/{analysisId}")
-    public ApiResponse<SearchCardAnalysisResponse> get(
+    public ApiResDTO<SearchCardAnalysisResDTO> get(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable Long analysisId
     ) {
-        SearchCardAnalysisResponse response = searchCardAnalysisQueryService.get(
+        SearchCardAnalysisResDTO response = searchCardAnalysisQueryService.get(
                 Long.valueOf(jwt.getSubject()),
                 analysisId
         );
-        return ApiResponse.success(response);
+        return ApiResDTO.success(response);
     }
 }

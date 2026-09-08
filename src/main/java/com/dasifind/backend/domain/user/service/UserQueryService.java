@@ -1,6 +1,6 @@
 package com.dasifind.backend.domain.user.service;
 
-import com.dasifind.backend.domain.user.dto.response.MyProfileResponse;
+import com.dasifind.backend.domain.user.dto.response.MyProfileResDTO;
 import com.dasifind.backend.domain.user.entity.User;
 import com.dasifind.backend.domain.user.repository.UserRepository;
 import com.dasifind.backend.global.error.BusinessException;
@@ -18,10 +18,10 @@ public class UserQueryService {
         this.userRepository = userRepository;
     }
 
-    public MyProfileResponse getMyProfile(Long userId) {
+    public MyProfileResDTO getMyProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
 
-        return MyProfileResponse.from(user);
+        return MyProfileResDTO.from(user);
     }
 }

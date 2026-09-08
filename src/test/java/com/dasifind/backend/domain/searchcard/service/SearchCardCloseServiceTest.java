@@ -1,7 +1,7 @@
 package com.dasifind.backend.domain.searchcard.service;
 
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCloseRequest;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCloseResponse;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCloseReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCloseResDTO;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.model.SearchCardCloseReason;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
@@ -48,7 +48,7 @@ class SearchCardCloseServiceTest {
         SearchCard searchCard = searchCard(12L, 7L, SearchCardStatus.ACTIVE);
         givenOwnedCard(searchCard);
 
-        SearchCardCloseResponse response = service.close(
+        SearchCardCloseResDTO response = service.close(
                 7L,
                 12L,
                 request(SearchCardStatus.FOUND, SearchCardCloseReason.FOUND_BY_RECOMMENDATION)
@@ -186,11 +186,11 @@ class SearchCardCloseServiceTest {
                 .thenReturn(Optional.of(searchCard));
     }
 
-    private SearchCardCloseRequest request(
+    private SearchCardCloseReqDTO request(
             SearchCardStatus status,
             SearchCardCloseReason reason
     ) {
-        return new SearchCardCloseRequest(status, reason);
+        return new SearchCardCloseReqDTO(status, reason);
     }
 
     private void assertError(Runnable action, ErrorCode errorCode) {

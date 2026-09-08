@@ -1,11 +1,11 @@
 package com.dasifind.backend.domain.searchcard.service;
 
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardLostLocationRequest;
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardUpdateRequest;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResponse;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardLostLocationReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardUpdateReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardUpdateResDTO;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.image.entity.SearchCardImage;
@@ -100,7 +100,7 @@ class SearchCardUpdateIntegrationTest {
         image.attachTo(searchCard.getId());
         searchCardImageRepository.saveAndFlush(image);
 
-        SearchCardUpdateResponse response = service.update(
+        SearchCardUpdateResDTO response = service.update(
                 user.getId(),
                 searchCard.getId(),
                 request(newAnalysis.getId())
@@ -130,7 +130,7 @@ class SearchCardUpdateIntegrationTest {
     private SearchCardAnalysis saveAnalysis(Long userId, String color) {
         return searchCardAnalysisRepository.saveAndFlush(SearchCardAnalysis.create(
                 userId,
-                new AiAnalysisClientResponse(
+                new AiAnalysisClientResDTO(
                         "WALLET",
                         "CARD_WALLET",
                         List.of(color),
@@ -143,8 +143,8 @@ class SearchCardUpdateIntegrationTest {
         ));
     }
 
-    private SearchCardUpdateRequest request(Long analysisId) {
-        return new SearchCardUpdateRequest(
+    private SearchCardUpdateReqDTO request(Long analysisId) {
+        return new SearchCardUpdateReqDTO(
                 analysisId,
                 "WALLET",
                 "남색 카드지갑",
@@ -155,7 +155,7 @@ class SearchCardUpdateIntegrationTest {
                 LocalDate.of(2026, 8, 17),
                 LocalTime.of(18, 0),
                 LocalTime.of(21, 0),
-                new SearchCardLostLocationRequest(
+                new SearchCardLostLocationReqDTO(
                         "판교역 스타벅스",
                         "경기도 성남시 분당구 판교역로 166",
                         new BigDecimal("37.3947000"),

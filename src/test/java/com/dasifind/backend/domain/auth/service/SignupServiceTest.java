@@ -1,7 +1,7 @@
 package com.dasifind.backend.domain.auth.service;
 
-import com.dasifind.backend.domain.auth.dto.request.SignupAgreementsRequest;
-import com.dasifind.backend.domain.auth.dto.request.SignupRequest;
+import com.dasifind.backend.domain.auth.dto.request.SignupAgreementsReqDTO;
+import com.dasifind.backend.domain.auth.dto.request.SignupReqDTO;
 import com.dasifind.backend.domain.auth.model.IssuedTokens;
 import com.dasifind.backend.domain.auth.model.SignupResult;
 import com.dasifind.backend.domain.user.entity.User;
@@ -55,7 +55,7 @@ class SignupServiceTest {
 
     @Test
     void 인증된_이메일로_사용자를_생성하고_토큰을_발급한다() {
-        SignupRequest request = signupRequest(" USER@Example.com ");
+        SignupReqDTO request = signupRequest(" USER@Example.com ");
         when(userRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("encoded-password");
         when(userRepository.saveAndFlush(any(User.class))).thenAnswer(invocation -> {
@@ -84,7 +84,7 @@ class SignupServiceTest {
 
     @Test
     void 이미_가입된_이메일이면_회원가입을_거부한다() {
-        SignupRequest request = signupRequest("user@example.com");
+        SignupReqDTO request = signupRequest("user@example.com");
         when(userRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(true);
 
         assertThatThrownBy(() -> signupService.signup(request))
@@ -98,7 +98,7 @@ class SignupServiceTest {
 
     @Test
     void 데이터베이스_중복_충돌도_가입된_이메일_오류로_변환한다() {
-        SignupRequest request = signupRequest("user@example.com");
+        SignupReqDTO request = signupRequest("user@example.com");
         when(userRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("encoded-password");
         when(userRepository.saveAndFlush(any(User.class)))
@@ -114,7 +114,7 @@ class SignupServiceTest {
 
     @Test
     void 리프레시_토큰_저장이_실패하면_이메일_인증_토큰을_소비하지_않는다() {
-        SignupRequest request = signupRequest("user@example.com");
+        SignupReqDTO request = signupRequest("user@example.com");
         when(userRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("encoded-password");
         when(userRepository.saveAndFlush(any(User.class))).thenAnswer(invocation -> {
@@ -133,7 +133,7 @@ class SignupServiceTest {
 
     @Test
     void 인증_토큰_최종_소비가_실패하면_저장한_리프레시_토큰을_폐기한다() {
-        SignupRequest request = signupRequest("user@example.com");
+        SignupReqDTO request = signupRequest("user@example.com");
         when(userRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("encoded-password");
         when(userRepository.saveAndFlush(any(User.class))).thenAnswer(invocation -> {
@@ -154,13 +154,13 @@ class SignupServiceTest {
         verify(authTokenService).revokeRefreshToken("refresh-token");
     }
 
-    private SignupRequest signupRequest(String email) {
-        return new SignupRequest(
+    private SignupReqDTO signupRequest(String email) {
+        return new SignupReqDTO(
                 email,
                 "evt_token",
                 "password123",
                 " 민준 ",
-                new SignupAgreementsRequest(true, true, true)
+                new SignupAgreementsReqDTO(true, true, true)
         );
     }
 }

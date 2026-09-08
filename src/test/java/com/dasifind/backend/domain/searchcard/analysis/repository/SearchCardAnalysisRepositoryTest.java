@@ -1,6 +1,6 @@
 package com.dasifind.backend.domain.searchcard.analysis.repository;
 
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.user.entity.User;
 import com.dasifind.backend.domain.user.repository.UserRepository;
@@ -39,7 +39,7 @@ class SearchCardAnalysisRepositoryTest {
         ));
         SearchCardAnalysis saved = repository.saveAndFlush(SearchCardAnalysis.create(
                 user.getId(),
-                new AiAnalysisClientResponse(
+                new AiAnalysisClientResDTO(
                         "WALLET",
                         "CARD_WALLET",
                         List.of("NAVY", "BLACK"),

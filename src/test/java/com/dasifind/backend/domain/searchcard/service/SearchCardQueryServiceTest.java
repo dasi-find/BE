@@ -1,6 +1,6 @@
 package com.dasifind.backend.domain.searchcard.service;
 
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResDTO;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
@@ -65,7 +65,7 @@ class SearchCardQueryServiceTest {
         when(lostLocationRepository.findAllBySearchCardIdIn(List.of(12L)))
                 .thenReturn(List.of(location));
 
-        SearchCardListResponse response = service.getMySearchCards(7L, null, 0, 20);
+        SearchCardListResDTO response = service.getMySearchCards(7L, null, 0, 20);
 
         assertThat(response.content()).hasSize(1);
         assertThat(response.content().getFirst().id()).isEqualTo(12L);
@@ -88,7 +88,7 @@ class SearchCardQueryServiceTest {
         when(searchCardRepository.findByUserIdAndStatus(any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        SearchCardListResponse response = service.getMySearchCards(
+        SearchCardListResDTO response = service.getMySearchCards(
                 7L,
                 SearchCardStatus.CLOSED,
                 1,

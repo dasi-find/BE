@@ -3,7 +3,7 @@ package com.dasifind.backend.domain.auth.controller;
 import com.dasifind.backend.domain.auth.cookie.RefreshTokenCookieFactory;
 import com.dasifind.backend.domain.auth.cookie.RefreshTokenCookieResolver;
 import com.dasifind.backend.domain.auth.service.AuthTokenService;
-import com.dasifind.backend.global.api.ApiResponse;
+import com.dasifind.backend.global.api.ApiResDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -33,7 +33,7 @@ public class LogoutController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(
+    public ResponseEntity<ApiResDTO<Void>> logout(
             @AuthenticationPrincipal Jwt jwt,
             HttpServletRequest request
     ) {
@@ -43,6 +43,6 @@ public class LogoutController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, expiredRefreshTokenCookie.toString())
-                .body(ApiResponse.success());
+                .body(ApiResDTO.success());
     }
 }

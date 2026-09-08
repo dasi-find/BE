@@ -1,6 +1,6 @@
 package com.dasifind.backend.domain.searchcard.analysis.entity;
 
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -76,7 +76,7 @@ public class SearchCardAnalysis {
     protected SearchCardAnalysis() {
     }
 
-    private SearchCardAnalysis(Long userId, AiAnalysisClientResponse result) {
+    private SearchCardAnalysis(Long userId, AiAnalysisClientResDTO result) {
         this.userId = userId;
         this.category = result.category();
         this.itemName = result.itemName();
@@ -89,7 +89,7 @@ public class SearchCardAnalysis {
         this.features.addAll(result.features());
     }
 
-    public static SearchCardAnalysis create(Long userId, AiAnalysisClientResponse result) {
+    public static SearchCardAnalysis create(Long userId, AiAnalysisClientResDTO result) {
         return new SearchCardAnalysis(userId, result);
     }
 

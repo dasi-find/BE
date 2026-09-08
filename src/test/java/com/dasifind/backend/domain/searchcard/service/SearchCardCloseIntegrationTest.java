@@ -1,10 +1,10 @@
 package com.dasifind.backend.domain.searchcard.service;
 
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCloseRequest;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCloseResponse;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCloseReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCloseResDTO;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.model.SearchCardCloseReason;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
@@ -57,7 +57,7 @@ class SearchCardCloseIntegrationTest {
         SearchCardAnalysis analysis = searchCardAnalysisRepository.saveAndFlush(
                 SearchCardAnalysis.create(
                         user.getId(),
-                        new AiAnalysisClientResponse(
+                        new AiAnalysisClientResDTO(
                                 "WALLET",
                                 "CARD_WALLET",
                                 List.of("NAVY"),
@@ -84,10 +84,10 @@ class SearchCardCloseIntegrationTest {
                 LocalDateTime.of(2026, 8, 18, 10, 0)
         ));
 
-        SearchCardCloseResponse response = service.close(
+        SearchCardCloseResDTO response = service.close(
                 user.getId(),
                 searchCard.getId(),
-                new SearchCardCloseRequest(
+                new SearchCardCloseReqDTO(
                         SearchCardStatus.FOUND,
                         SearchCardCloseReason.FOUND_BY_RECOMMENDATION
                 )

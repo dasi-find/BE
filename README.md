@@ -91,6 +91,10 @@ Spring Security가 추가된 상태이므로 인증 설정 구현 전에는 임�
 
 ## 테스트 및 빌드
 
+요청 DTO의 클래스명과 파일명은 `ReqDTO`, 응답 DTO는 `ResDTO` 접미사를 사용합니다.
+예: `LoginReqDTO.java`, `LoginResDTO.java`. 공통 응답은 `ApiResDTO`, AI 연동 DTO에도
+같은 규칙을 적용합니다. 도메인별 `dto/request`, `dto/response` 패키지 구조를 유지합니다.
+
 ```bash
 ./gradlew test
 ./gradlew build

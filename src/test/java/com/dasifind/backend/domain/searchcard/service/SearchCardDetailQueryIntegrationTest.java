@@ -1,9 +1,9 @@
 package com.dasifind.backend.domain.searchcard.service;
 
-import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResponse;
+import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResponse;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResDTO;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.image.entity.SearchCardImage;
@@ -67,7 +67,7 @@ class SearchCardDetailQueryIntegrationTest {
         SearchCardAnalysis analysis = searchCardAnalysisRepository.saveAndFlush(
                 SearchCardAnalysis.create(
                         user.getId(),
-                        new AiAnalysisClientResponse(
+                        new AiAnalysisClientResDTO(
                                 "WALLET",
                                 "CARD_WALLET",
                                 List.of("NAVY"),
@@ -115,7 +115,7 @@ class SearchCardDetailQueryIntegrationTest {
         when(imageStorage.createDownloadUrl(image.getStorageKey()))
                 .thenReturn("https://download/reference");
 
-        SearchCardDetailResponse response = service.getMySearchCard(
+        SearchCardDetailResDTO response = service.getMySearchCard(
                 user.getId(),
                 searchCard.getId()
         );

@@ -2,9 +2,9 @@ package com.dasifind.backend.domain.searchcard.service;
 
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCreateRequest;
-import com.dasifind.backend.domain.searchcard.dto.request.SearchCardLostLocationRequest;
-import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResponse;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardCreateReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.request.SearchCardLostLocationReqDTO;
+import com.dasifind.backend.domain.searchcard.dto.response.SearchCardCreateResDTO;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.image.entity.SearchCardImage;
@@ -45,7 +45,7 @@ public class SearchCardCreateService {
     }
 
     @Transactional
-    public SearchCardCreateResponse create(Long userId, SearchCardCreateRequest request) {
+    public SearchCardCreateResDTO create(Long userId, SearchCardCreateReqDTO request) {
         validateUser(userId);
         validateRequest(request);
         validateAnalysis(userId, request.analysisId());
@@ -58,7 +58,7 @@ public class SearchCardCreateService {
         LocalDateTime now = LocalDateTime.now();
         SearchCard searchCard = searchCardRepository.saveAndFlush(toEntity(userId, request, now));
 
-        SearchCardLostLocationRequest location = request.lostLocation();
+        SearchCardLostLocationReqDTO location = request.lostLocation();
         lostLocationRepository.save(LostLocation.create(
                 searchCard.getId(),
                 location.placeName().trim(),
@@ -70,7 +70,7 @@ public class SearchCardCreateService {
         ));
         images.forEach(image -> image.attachTo(searchCard.getId()));
 
-        return SearchCardCreateResponse.from(searchCard);
+        return SearchCardCreateResDTO.from(searchCard);
     }
 
     private void validateUser(Long userId) {
@@ -87,7 +87,7 @@ public class SearchCardCreateService {
         }
     }
 
-    private void validateRequest(SearchCardCreateRequest request) {
+    private void validateRequest(SearchCardCreateReqDTO request) {
         if (request.lostStartTime() != null
                 && request.lostEndTime() != null
                 && request.lostStartTime().isAfter(request.lostEndTime())) {
@@ -121,7 +121,7 @@ public class SearchCardCreateService {
         return images;
     }
 
-    private SearchCard toEntity(Long userId, SearchCardCreateRequest request, LocalDateTime now) {
+    private SearchCard toEntity(Long userId, SearchCardCreateReqDTO request, LocalDateTime now) {
         return SearchCard.create(
                 userId,
                 request.analysisId(),

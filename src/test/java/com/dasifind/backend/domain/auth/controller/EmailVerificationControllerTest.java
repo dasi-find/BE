@@ -1,7 +1,7 @@
 package com.dasifind.backend.domain.auth.controller;
 
-import com.dasifind.backend.domain.auth.dto.response.EmailVerificationConfirmResponse;
-import com.dasifind.backend.domain.auth.dto.response.EmailVerificationSendResponse;
+import com.dasifind.backend.domain.auth.dto.response.EmailVerificationConfirmResDTO;
+import com.dasifind.backend.domain.auth.dto.response.EmailVerificationSendResDTO;
 import com.dasifind.backend.domain.auth.service.EmailVerificationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ class EmailVerificationControllerTest {
     @Test
     void 인증번호_발송_API가_명세된_응답을_반환한다() throws Exception {
         when(emailVerificationService.send("user@example.com"))
-                .thenReturn(new EmailVerificationSendResponse("ev_request", 300));
+                .thenReturn(new EmailVerificationSendResDTO("ev_request", 300));
 
         mockMvc.perform(post("/api/v1/auth/email-verifications")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -48,7 +48,7 @@ class EmailVerificationControllerTest {
     @Test
     void 인증번호_확인_API가_명세된_응답을_반환한다() throws Exception {
         when(emailVerificationService.confirm("ev_request", "123456"))
-                .thenReturn(new EmailVerificationConfirmResponse("evt_token", "user@example.com"));
+                .thenReturn(new EmailVerificationConfirmResDTO("evt_token", "user@example.com"));
 
         mockMvc.perform(post("/api/v1/auth/email-verifications/ev_request/confirm")
                         .contentType(MediaType.APPLICATION_JSON)
