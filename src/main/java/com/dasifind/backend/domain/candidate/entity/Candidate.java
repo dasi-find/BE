@@ -2,12 +2,14 @@ package com.dasifind.backend.domain.candidate.entity;
 
 import com.dasifind.backend.domain.candidate.model.ScoreValues;
 import com.dasifind.backend.domain.candidate.model.EvidenceType;
+import com.dasifind.backend.domain.candidate.model.CandidateFeedback;
 import com.dasifind.backend.domain.policeitem.entity.PoliceItem;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.BatchSize;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,10 +49,22 @@ public class Candidate {
     private LocalDateTime updatedAt;
     @Version
     private long version;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private CandidateFeedback feedback;
+    @Column(name = "viewed_at")
+    private LocalDateTime viewedAt;
+    @Column(name = "notification_suppressed", nullable = false)
+    private boolean notificationSuppressed;
+    @Column(name = "assessed_analysis_id")
+    private Long assessedAnalysisId;
+    @Column(name = "assessed_police_item_version")
+    private Long assessedPoliceItemVersion;
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "candidate_evidence", joinColumns = @JoinColumn(name = "candidate_id"))
     @OrderColumn(name = "sort_order")
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @BatchSize(size = 100)
     private List<CandidateEvidence> evidence = new ArrayList<>();
 
     protected Candidate() {
@@ -102,6 +116,32 @@ public class Candidate {
         this.evidence.clear();
         this.evidence.addAll(evidenceCopy);
         this.updatedAt = now;
+        this.assessedAnalysisId = searchCard.getAnalysisId();
+        this.assessedPoliceItemVersion = policeItem.getVersion();
+    }
+
+    public boolean isCurrentAssessment() {
+        return assessedAnalysisId != null && assessedAnalysisId.equals(searchCard.getAnalysisId())
+                && assessedPoliceItemVersion != null && assessedPoliceItemVersion == policeItem.getVersion();
+    }
+
+    public boolean isExcluded() {
+        return feedback == CandidateFeedback.NOT_MINE;
+    }
+
+    public void markViewed(LocalDateTime now) {
+        Objects.requireNonNull(now, "now");
+        if (viewedAt == null) viewedAt = now;
+    }
+
+    public void updateFeedback(CandidateFeedback feedback) {
+        this.feedback = Objects.requireNonNull(feedback, "feedback");
+        if (isExcluded()) notificationSuppressed = true;
+    }
+
+    public void clearFeedback() {
+        feedback = null;
+        // An exclusion can be undone, but never erase the historical notification opt-out.
     }
 
     // Hibernate can materialize an all-null embeddable as null.

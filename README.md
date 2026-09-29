@@ -111,6 +111,9 @@ Spring Security가 추가된 상태이므로 인증 설정 구현 전에는 임�
 제출 기획서 기준 후보·습득물 저장 구조와 선택 실행하는 MySQL 검증 방법은
 [`docs/integration/candidate-storage.md`](docs/integration/candidate-storage.md)를 참고합니다.
 
+후보 목록·상세·읽음·피드백 API와 제외/복원·오래된 점수 처리 정책은
+[`docs/integration/candidate-api.md`](docs/integration/candidate-api.md)에 정리되어 있습니다.
+
 ## 프로필
 
 | Profile | 용도 | Database |
