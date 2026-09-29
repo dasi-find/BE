@@ -1,6 +1,8 @@
 package com.dasifind.backend.domain.searchcard.service;
 
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListItemResDTO;
+import com.dasifind.backend.domain.candidate.service.CandidateSummaryQueryService;
+import com.dasifind.backend.domain.candidate.service.CandidateSummaryQueryService.Summary;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResDTO;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
@@ -36,15 +38,18 @@ public class SearchCardQueryService {
     private final SearchCardRepository searchCardRepository;
     private final LostLocationRepository lostLocationRepository;
     private final UserRepository userRepository;
+    private final CandidateSummaryQueryService candidateSummaries;
 
     public SearchCardQueryService(
             SearchCardRepository searchCardRepository,
             LostLocationRepository lostLocationRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            CandidateSummaryQueryService candidateSummaries
     ) {
         this.searchCardRepository = searchCardRepository;
         this.lostLocationRepository = lostLocationRepository;
         this.userRepository = userRepository;
+        this.candidateSummaries = candidateSummaries;
     }
 
     public SearchCardListResDTO getMySearchCards(
@@ -62,10 +67,13 @@ public class SearchCardQueryService {
                 : searchCardRepository.findByUserIdAndStatus(userId, status, pageable);
 
         Map<Long, LostLocation> locationsBySearchCardId = findLocations(searchCards.getContent());
+        var summaries = candidateSummaries.summarize(userId,
+                searchCards.getContent().stream().map(SearchCard::getId).toList());
         List<SearchCardListItemResDTO> content = searchCards.getContent().stream()
                 .map(searchCard -> SearchCardListItemResDTO.from(
                         searchCard,
-                        locationsBySearchCardId.get(searchCard.getId())
+                        locationsBySearchCardId.get(searchCard.getId()),
+                        summaries.getOrDefault(searchCard.getId(), Summary.EMPTY).bestCandidateScore()
                 ))
                 .toList();
 

@@ -12,9 +12,19 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.List;
 import java.time.LocalDateTime;
 
 public interface SearchCardRepository extends JpaRepository<SearchCard, Long> {
+
+    @Query("""
+            select card from SearchCard card
+            where card.userId = :userId
+                and card.status = com.dasifind.backend.domain.searchcard.model.SearchCardStatus.ACTIVE
+                and card.searchExpiresAt >= :now
+            order by card.createdAt desc, card.id desc
+            """)
+    List<SearchCard> findActiveForHome(@Param("userId") Long userId, @Param("now") LocalDateTime now);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""

@@ -114,6 +114,9 @@ Spring Security가 추가된 상태이므로 인증 설정 구현 전에는 임�
 후보 목록·상세·읽음·피드백 API와 제외/복원·오래된 점수 처리 정책은
 [`docs/integration/candidate-api.md`](docs/integration/candidate-api.md)에 정리되어 있습니다.
 
+홈 요약과 수색카드 후보 집계는 [`docs/integration/home-api.md`](docs/integration/home-api.md)를
+참고합니다. 홈의 미확인 알림 수는 알림 도메인 연결 전까지 0으로 반환합니다.
+
 ## 프로필
 
 | Profile | 용도 | Database |
