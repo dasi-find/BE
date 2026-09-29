@@ -29,7 +29,7 @@ class CandidateMySqlIntegrationTest extends CandidateStorageIntegrationTest {
     @Test
     void 전체_Flyway_마이그레이션과_JPA_검증을_통과한다() {
         assertThat(jdbc.queryForObject(
-                "select count(*) from flyway_schema_history where success = true", Integer.class)).isEqualTo(8);
+                "select count(*) from flyway_schema_history where success = true", Integer.class)).isEqualTo(9);
     }
 
     @ParameterizedTest
@@ -79,5 +79,17 @@ class CandidateMySqlIntegrationTest extends CandidateStorageIntegrationTest {
         assertThatThrownBy(() -> jdbc.update(
                 "update candidate_evidence set score_element='UNKNOWN' where candidate_id=?", saved.getId()))
                 .rootCause().isInstanceOfSatisfying(SQLException.class, ex -> assertThat(ex.getErrorCode()).isEqualTo(3819));
+    }
+
+    @Test
+    void 피드백과_입력버전의_DB_제약을_검증한다() {
+        PoliceItem item = items.saveAndFlush(item(PoliceItemSource.POLICE, "F-1", 1));
+        Candidate saved = candidates.saveAndFlush(candidate(card, item));
+        for (String assignment : java.util.List.of("feedback='UNKNOWN'", "feedback='NOT_MINE'",
+                "notification_suppressed=2", "assessed_analysis_id=null", "assessed_police_item_version=-1")) {
+            assertThatThrownBy(() -> jdbc.update("update candidate set " + assignment + " where id=?", saved.getId()))
+                    .rootCause().isInstanceOfSatisfying(SQLException.class,
+                            ex -> assertThat(ex.getErrorCode()).isEqualTo(3819));
+        }
     }
 }
