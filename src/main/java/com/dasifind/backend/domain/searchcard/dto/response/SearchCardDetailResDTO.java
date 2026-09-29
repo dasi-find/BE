@@ -40,7 +40,9 @@ public record SearchCardDetailResDTO(
             SearchCard searchCard,
             LostLocation lostLocation,
             SearchCardAnalysis analysis,
-            List<SearchCardDetailImageResDTO> images
+            List<SearchCardDetailImageResDTO> images,
+            int candidateCount,
+            BigDecimal bestCandidateScore
     ) {
         return new SearchCardDetailResDTO(
                 searchCard.getId(),
@@ -58,8 +60,8 @@ public record SearchCardDetailResDTO(
                 SearchCardDetailAnalysisResDTO.from(analysis),
                 searchCard.getStatus(),
                 searchCard.getSearchExpiresAt(),
-                0,
-                null
+                candidateCount,
+                bestCandidateScore
         );
     }
 }

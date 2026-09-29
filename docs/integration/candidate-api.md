@@ -61,4 +61,4 @@ DASI_MYSQL_TEST_URL='jdbc:mysql://127.0.0.1:13316/candidate_test?serverTimezone=
 
 일반 CI에는 외부 MySQL이 없어 MySQL 전용 테스트를 건너뛴다. H2 테스트만으로 SQL migration이 검증되는 것은 아니다.
 
-실제 AI 매칭/수집, 알림 발송, 홈·수색카드 요약(candidateCount/bestCandidateScore) 연결은 후속 작업이다. 이 API는 저장된 최신 후보를 조회하며 후보를 자동 생성하지 않는다. 점수는 소유권 확률이 아니다.
+실제 AI 매칭/수집과 알림 발송은 후속 작업이다. 홈·수색카드 요약(candidateCount/bestCandidateScore)은 #65에서 연결했다([홈 API 계약](home-api.md)). 이 API는 저장된 최신 후보를 조회하며 후보를 자동 생성하지 않는다. 점수는 소유권 확률이 아니다.

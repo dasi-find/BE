@@ -1,6 +1,8 @@
 package com.dasifind.backend.domain.searchcard.service;
 
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
+import com.dasifind.backend.domain.candidate.service.CandidateSummaryQueryService;
+import com.dasifind.backend.domain.candidate.service.CandidateSummaryQueryService.Summary;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailImageResDTO;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResDTO;
@@ -28,6 +30,7 @@ public class SearchCardDetailQueryService {
     private final SearchCardImageRepository searchCardImageRepository;
     private final UserRepository userRepository;
     private final ImageStorage imageStorage;
+    private final CandidateSummaryQueryService candidateSummaries;
 
     public SearchCardDetailQueryService(
             SearchCardRepository searchCardRepository,
@@ -35,7 +38,8 @@ public class SearchCardDetailQueryService {
             SearchCardAnalysisRepository searchCardAnalysisRepository,
             SearchCardImageRepository searchCardImageRepository,
             UserRepository userRepository,
-            ImageStorage imageStorage
+            ImageStorage imageStorage,
+            CandidateSummaryQueryService candidateSummaries
     ) {
         this.searchCardRepository = searchCardRepository;
         this.lostLocationRepository = lostLocationRepository;
@@ -43,6 +47,7 @@ public class SearchCardDetailQueryService {
         this.searchCardImageRepository = searchCardImageRepository;
         this.userRepository = userRepository;
         this.imageStorage = imageStorage;
+        this.candidateSummaries = candidateSummaries;
     }
 
     public SearchCardDetailResDTO getMySearchCard(Long userId, Long searchCardId) {
@@ -64,7 +69,10 @@ public class SearchCardDetailQueryService {
                 ))
                 .toList();
 
-        return SearchCardDetailResDTO.of(searchCard, lostLocation, analysis, images);
+        Summary summary = candidateSummaries.summarize(userId, List.of(searchCardId))
+                .getOrDefault(searchCardId, Summary.EMPTY);
+        return SearchCardDetailResDTO.of(searchCard, lostLocation, analysis, images,
+                Math.toIntExact(summary.candidateCount()), summary.bestCandidateScore());
     }
 
     private void validateUser(Long userId) {

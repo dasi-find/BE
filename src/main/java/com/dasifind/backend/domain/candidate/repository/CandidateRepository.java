@@ -12,6 +12,9 @@ import jakarta.persistence.LockModeType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.Collection;
+import java.util.List;
+import java.time.LocalDateTime;
 
 public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     String CURRENT = """
@@ -21,6 +24,21 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     String INCLUDED = "(c.feedback is null or c.feedback <> com.dasifind.backend.domain.candidate.model.CandidateFeedback.NOT_MINE)";
 
     Optional<Candidate> findBySearchCardIdAndPoliceItemId(Long searchCardId, Long policeItemId);
+
+    @Query("select c.searchCard.id as searchCardId, count(c) as candidateCount, max(c.totalScore) as bestCandidateScore"
+            + " from Candidate c where c.searchCard.userId = :userId and c.searchCard.id in :cardIds and "
+            + CURRENT + " and " + INCLUDED + " and c.totalScore is not null group by c.searchCard.id")
+    List<CandidateSummaryProjection> summarizeByCardIds(@Param("userId") Long userId,
+                                                       @Param("cardIds") Collection<Long> cardIds);
+
+    @EntityGraph(attributePaths = {"searchCard", "policeItem"})
+    @Query("select c from Candidate c where c.searchCard.userId = :userId and "
+            + " c.searchCard.status = com.dasifind.backend.domain.searchcard.model.SearchCardStatus.ACTIVE"
+            + " and c.searchCard.searchExpiresAt >= :now and c.viewedAt is null and "
+            + CURRENT + " and " + INCLUDED + " and c.totalScore is not null"
+            + " order by c.totalScore desc, case when c.policeItem.foundDate is null then 1 else 0 end,"
+            + " c.policeItem.foundDate desc, c.id asc")
+    List<Candidate> findNewForHome(@Param("userId") Long userId, @Param("now") LocalDateTime now, Pageable pageable);
 
     @EntityGraph(attributePaths = {"searchCard", "policeItem"})
     @Query(value = "select c from Candidate c where c.searchCard.id = :cardId and " + CURRENT

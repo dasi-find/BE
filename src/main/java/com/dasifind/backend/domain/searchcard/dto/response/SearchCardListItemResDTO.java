@@ -20,7 +20,8 @@ public record SearchCardListItemResDTO(
 
     public static SearchCardListItemResDTO from(
             SearchCard searchCard,
-            LostLocation lostLocation
+            LostLocation lostLocation,
+            BigDecimal bestCandidateScore
     ) {
         return new SearchCardListItemResDTO(
                 searchCard.getId(),
@@ -28,7 +29,7 @@ public record SearchCardListItemResDTO(
                 searchCard.getStatus(),
                 searchCard.getLostDate(),
                 lostLocation.getPlaceName(),
-                null,
+                bestCandidateScore,
                 searchCard.getSearchExpiresAt()
         );
     }

@@ -1,6 +1,7 @@
 package com.dasifind.backend.domain.searchcard.service;
 
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardListResDTO;
+import com.dasifind.backend.domain.candidate.service.CandidateSummaryQueryService;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.entity.SearchCard;
 import com.dasifind.backend.domain.searchcard.model.SearchCardStatus;
@@ -46,12 +47,16 @@ class SearchCardQueryServiceTest {
 
     private SearchCardQueryService service;
 
+    @Mock
+    private CandidateSummaryQueryService candidateSummaries;
+
     @BeforeEach
     void setUp() {
         service = new SearchCardQueryService(
                 searchCardRepository,
                 lostLocationRepository,
-                userRepository
+                userRepository,
+                candidateSummaries
         );
     }
 

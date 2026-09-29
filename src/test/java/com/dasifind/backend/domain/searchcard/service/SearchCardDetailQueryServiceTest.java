@@ -1,6 +1,7 @@
 package com.dasifind.backend.domain.searchcard.service;
 
 import com.dasifind.backend.domain.searchcard.analysis.client.AiAnalysisClientResDTO;
+import com.dasifind.backend.domain.candidate.service.CandidateSummaryQueryService;
 import com.dasifind.backend.domain.searchcard.analysis.entity.SearchCardAnalysis;
 import com.dasifind.backend.domain.searchcard.analysis.repository.SearchCardAnalysisRepository;
 import com.dasifind.backend.domain.searchcard.dto.response.SearchCardDetailResDTO;
@@ -58,6 +59,9 @@ class SearchCardDetailQueryServiceTest {
 
     private SearchCardDetailQueryService service;
 
+    @Mock
+    private CandidateSummaryQueryService candidateSummaries;
+
     @BeforeEach
     void setUp() {
         service = new SearchCardDetailQueryService(
@@ -66,7 +70,8 @@ class SearchCardDetailQueryServiceTest {
                 searchCardAnalysisRepository,
                 searchCardImageRepository,
                 userRepository,
-                imageStorage
+                imageStorage,
+                candidateSummaries
         );
     }
 
