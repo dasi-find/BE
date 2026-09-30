@@ -29,7 +29,7 @@ class CandidateMySqlIntegrationTest extends CandidateStorageIntegrationTest {
     @Test
     void 전체_Flyway_마이그레이션과_JPA_검증을_통과한다() {
         assertThat(jdbc.queryForObject(
-                "select count(*) from flyway_schema_history where success = true", Integer.class)).isEqualTo(9);
+                "select count(*) from flyway_schema_history where success = true", Integer.class)).isEqualTo(10);
     }
 
     @ParameterizedTest

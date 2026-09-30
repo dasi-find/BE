@@ -4,6 +4,7 @@ import com.dasifind.backend.domain.candidate.repository.CandidateRepository;
 import com.dasifind.backend.domain.candidate.service.CandidateSummaryQueryService;
 import com.dasifind.backend.domain.candidate.service.CandidateSummaryQueryService.Summary;
 import com.dasifind.backend.domain.home.dto.response.HomeResDTO;
+import com.dasifind.backend.domain.notification.repository.NotificationRepository;
 import com.dasifind.backend.domain.searchcard.entity.LostLocation;
 import com.dasifind.backend.domain.searchcard.repository.LostLocationRepository;
 import com.dasifind.backend.domain.searchcard.repository.SearchCardRepository;
@@ -30,23 +31,26 @@ public class HomeQueryService {
     private final CandidateSummaryQueryService summaries;
     private final UserRepository users;
     private final Clock homeClock;
+    private final NotificationRepository notifications;
 
     public HomeQueryService(SearchCardRepository cards, LostLocationRepository locations,
                             CandidateRepository candidates, CandidateSummaryQueryService summaries,
-                            UserRepository users, Clock homeClock) {
+                            UserRepository users, Clock homeClock, NotificationRepository notifications) {
         this.cards = cards;
         this.locations = locations;
         this.candidates = candidates;
         this.summaries = summaries;
         this.users = users;
         this.homeClock = homeClock;
+        this.notifications = notifications;
     }
 
     public HomeResDTO getHome(Long userId) {
         if (!users.existsById(userId)) throw new BusinessException(ErrorCode.INVALID_TOKEN);
         LocalDateTime now = LocalDateTime.now(homeClock);
+        long unreadCount = notifications.countByUserIdAndReadAtIsNull(userId);
         var activeCards = cards.findActiveForHome(userId, now);
-        if (activeCards.isEmpty()) return new HomeResDTO(List.of(), List.of(), 0);
+        if (activeCards.isEmpty()) return new HomeResDTO(List.of(), List.of(), unreadCount);
         var cardIds = activeCards.stream().map(card -> card.getId()).toList();
         Map<Long, LostLocation> places = locations.findAllBySearchCardIdIn(cardIds).stream()
                 .collect(Collectors.toMap(LostLocation::getSearchCardId, Function.identity()));
@@ -63,7 +67,6 @@ public class HomeQueryService {
                         candidate.getSearchCard().getId(), candidate.getPoliceItem().getItemName(),
                         candidate.getPoliceItem().getStoragePlace(), candidate.getTotalScore(), true))
                 .toList();
-        // Notification persistence is not implemented yet; replace with its unread count when integrated.
-        return new HomeResDTO(cardDtos, newCandidates, 0);
+        return new HomeResDTO(cardDtos, newCandidates, unreadCount);
     }
 }
