@@ -92,7 +92,7 @@ class HomeApiIntegrationTest {
     }
 
     @Test
-    void 빈_홈은_빈배열과_알림_임시값_0을_반환한다() throws Exception {
+    void 빈_홈은_빈배열과_미확인알림_0을_반환한다() throws Exception {
         mvc.perform(get("/api/v1/home").with(jwt().jwt(j -> j.subject(owner.getId().toString()))))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.result.activeSearchCards").isEmpty())
                 .andExpect(jsonPath("$.result.newCandidates").isEmpty())
@@ -255,7 +255,7 @@ class HomeApiIntegrationTest {
         var statistics = emf.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
         assertThat(home.getHome(owner.getId()).activeSearchCards()).hasSize(12);
-        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(5);
+        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(6);
     }
 
     private void assertSummaryEndpoints(SearchCard card, int count, int maxScore) throws Exception {
